@@ -4,14 +4,11 @@
 # Date                          Version                Created By
 # 8-Nov-2024                  1.0         Rajesh Kumar Jena(Initial Version)
 ################################################################################
-
-
 import logging
 import warnings
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
-
 from sklearn.preprocessing import (
     RobustScaler,
     MinMaxScaler,
@@ -20,43 +17,32 @@ from sklearn.preprocessing import (
     Normalizer,
 )
 
-
 def linear_regression_forecast(**kwargs):
     """
     Perform a linear regression forecast, predicting the value from the corresponding period in the training set.
-
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_x': The training exogenious/features data (a numpy array).
         - 'test_x': The test exogenious/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
         - 'test_y': The test time series data (a numpy array).
-
-
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators
-
     Returns:
     - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
-
-
     Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
-
     test_feature_1 = [929.0, 148.0, 718.0, 282.0]
     test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
-
-
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
     test_y = np.array([121, 122, 124, 123])
-
     model_params = {'scaling_method' : 'MinMaxScaler' }
-
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted= linear_regression_forecast(train_x= train_x , test_x=test_x , test_y = test_y, train_y =  train_y, model_params= model_params )
+    predicted= linear_regression_forecast(train_x= train_x , test_x=test_x ,
+                                          test_y = test_y, train_y =  train_y, model_params= model_params )
     # Output the predicted values
     print("Predicted In-Train and Test Values:", predicted)
     """
@@ -87,48 +73,36 @@ def linear_regression_forecast(**kwargs):
     )
     return Y_pred, lr_model
 
-
 def seasonal_naive_forecast(**kwargs):
     """
     Perform a seasonal naive forecast, predicting the value from the corresponding period in the training set.
-
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_x': The training exogenious/features data (a numpy array).
         - 'test_x': The test exogenious/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
         - 'test_y': The test time series data (a numpy array).
-
-
         - 'season_length': The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
-
     Returns:
     - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
-
-
     Example Usage:
-
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
-
     test_feature_1 = [929.0, 148.0, 718.0, 282.0]
     test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
-
-
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
     test_y = np.array([121, 122, 124, 123])
-
     model_params = {'season_length' : 12 }
-
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted= seasonal_naive_forecast(train_x= train_x , test_x=test_x , test_y = test_y, train_y =  train_y, model_params= model_params )
+    predicted= seasonal_naive_forecast(train_x= train_x , test_x=test_x , test_y = test_y, 
+                                       train_y =  train_y, model_params= model_params )
     # Output the predicted values
     print("Predicted In-Train and Test Values:", predicted)
     """
-
+    
     # Extract values from kwargs
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
