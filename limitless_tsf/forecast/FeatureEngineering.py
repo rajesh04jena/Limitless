@@ -2,7 +2,7 @@
 # Name: FeatureTransformer.py
 # Purpose: Generate Features for Univariate Data
 # Date                          Version                Created By
-# 28-Jun-2021                   1.0         Rajesh Kumar Jena(Initial Version)
+# 8-Nov-2024                   1.0         Rajesh Kumar Jena(Initial Version)
 ################################################################################
 
 import warnings
