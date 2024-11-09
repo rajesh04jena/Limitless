@@ -16,6 +16,7 @@ from sklearn.preprocessing import (
     MaxAbsScaler,
     Normalizer,
 )
+import pmdarima as pm
 
 def linear_regression_forecast(**kwargs):
     """
@@ -124,3 +125,77 @@ def seasonal_naive_forecast(**kwargs):
         ]  # Seasonal index in training set
     Y_pred = np.append(train_y, predicted_test_y)
     return Y_pred
+
+def auto_arima_forecast(**kwargs):
+    """
+    Perform Auto ARIMA forecasting, automatically tuning the parameters p, d, q, and seasonal components.
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training data (a numpy array or list).
+        - 'test_x': The test data (a numpy array or list).
+        - 'season_length': The length of the seasonal period (optional, defaults to None).
+        - Other parameters for `auto_arima` (e.g., 'm' for seasonality, 'start_p', 'start_q', etc.).
+    Returns:
+    - predicted_test_y: A numpy array containing the predicted values for the test set.
+    Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+    test_y = np.array([121, 122, 124, 123])
+    model_params = {'season_length' : 12 }
+    # Using kwargs to pass train_x, test_x, and season_length
+    predicted_test_y = auto_arima_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+                                           train_y =  train_y, model_params = model_params)
+    # Output the predicted values
+    print("Predicted Test Values:", predicted_test_y)
+    """
+    # Extract values from kwargs
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )
+    m = kwargs["model_params"]["season_length"]
+    # We will let auto_arima automatically tune p, d, q, and seasonal components (P, D, Q, m)
+    # Ensure there are atleast 2 cycles to detect seasonality or set seasonal=False in auto-arima
+    if len(train_y) <= m * 2:
+        model = pm.auto_arima(
+            train_y,
+            seasonal=False,
+            m=m,
+            trace=True,
+            stepwise=True,
+            suppress_warnings=True,
+        )
+    else:
+        model = pm.auto_arima(
+            train_y,
+            seasonal=True,
+            m=m,
+            trace=True,
+            stepwise=True,
+            suppress_warnings=True,
+        )
+    # Make forecasts for the test set and append the in-train values
+    predicted_test_y = model.predict(n_periods=len(test_y))
+    Y_pred = np.append(train_y, predicted_test_y)
+    return Y_pred, model
+
+
+
+
+
+
+
+
+
+
+
+
+
