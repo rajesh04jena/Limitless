@@ -291,8 +291,8 @@ def holt_winters_forecast(**kwargs):
     between additive and multiplicative based on training data.
 
     Parameters:
-    - train: The training data (time series).
-    - test_len: The number of periods to forecast.
+    - 'train_x': The training data (a numpy array or list).
+    - 'test_x': The test data (a numpy array or list).
     - alpha: Level smoothing parameter.
     - beta: Trend smoothing parameter.
     - gamma: Seasonal smoothing parameter.
