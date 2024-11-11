@@ -80,8 +80,6 @@ def seasonal_naive_forecast(**kwargs):
     Perform a seasonal naive forecast, predicting the value from the corresponding period in the training set.
     Parameters:
     - kwargs: Keyword arguments that can include:
-        - 'train_x': The training exogenious/features data (a numpy array).
-        - 'test_x': The test exogenious/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
         - 'test_y': The test time series data (a numpy array).
         - 'season_length': The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
@@ -132,8 +130,8 @@ def auto_arima_forecast(**kwargs):
     Perform Auto ARIMA forecasting, automatically tuning the parameters p, d, q, and seasonal components.
     Parameters:
     - kwargs: Keyword arguments that can include:
-        - 'train_x': The training data (a numpy array or list).
-        - 'test_x': The test data (a numpy array or list).
+        - 'train_y': The training data (a numpy array or list).
+        - 'test_y': The test data (a numpy array or list).
         - 'season_length': The length of the seasonal period (optional, defaults to None).
         - Other parameters for `auto_arima` (e.g., 'm' for seasonality, 'start_p', 'start_q', etc.).
     Returns:
@@ -192,8 +190,8 @@ def simple_exponential_smoothing(**kwargs):
     """
     Simple Exponential Smoothing (SES)
     Parameters (via kwargs):
-    - 'train_x': The training data (a numpy array or list).
-    - 'test_x': The test data (a numpy array or list).
+    - 'train_y': The training data (a numpy array or list).
+    - 'test_y': The test data (a numpy array or list).
     - alpha: Smoothing parameter (0 < alpha < 1).
     Returns:
     - forecast: Array of predicted values using SES.
@@ -237,8 +235,8 @@ def double_exponential_smoothing(**kwargs):
     """
     Double Exponential Smoothing (DES)
     Parameters (via kwargs):
-    - 'train_x': The training data (a numpy array or list).
-    - 'test_x': The test data (a numpy array or list).
+    - 'train_y': The training data (a numpy array or list).
+    - 'test_y': The test data (a numpy array or list).
     - alpha: Smoothing parameter for level.
     - beta: Smoothing parameter for trend.
     Returns:
@@ -291,8 +289,8 @@ def holt_winters_forecast(**kwargs):
     between additive and multiplicative based on training data.
 
     Parameters:
-    - 'train_x': The training data (a numpy array or list).
-    - 'test_x': The test data (a numpy array or list).
+    - 'train_y': The training data (a numpy array or list).
+    - 'test_y': The test data (a numpy array or list).
     - alpha: Level smoothing parameter.
     - beta: Trend smoothing parameter.
     - gamma: Seasonal smoothing parameter.
@@ -366,3 +364,63 @@ def holt_winters_forecast(**kwargs):
     # Combine training data with forecast
     forecast_combined = np.concatenate((train_y, forecast))
     return forecast_combined, selected_model
+
+def croston_tsb_forecast(**kwargs):
+    """
+    Croston's TSB (Teunter, Syntetos, and Babai) method for intermittent demand forecasting.    
+    Parameters:
+    - 'train_y': The training data (a numpy array or list).
+    - 'test_y': The test data (a numpy array or list).        
+    - test_len: The number of periods to forecast.
+    - alpha: Smoothing parameter for average demand.
+    - beta: Smoothing parameter for demand period length.    
+    Returns:
+    - forecast: Forecasted values for the test periods.
+    #Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300 ,
+                           300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0,71002, 16900,120301,
+                           41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0,71002, 16900,120301]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0,
+                        100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0])
+    test_y = np.array([121, 0, 124, 0])
+    model_params = {'demand_smoothening_parameter' : 0.3 ,
+                    'period_length_smoothening_parameter' : 0.3}
+    # Using kwargs to pass train_x, test_x, and season_length
+    predicted_test_y = croston_tsb_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+                                       train_y =  train_y, model_params = model_params)
+    # Output the predicted values
+    print("Predicted Test Values:", predicted_test_y)
+    """
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )
+    alpha = kwargs["model_params"]["demand_smoothening_parameter"]
+    beta = kwargs["model_params"]["period_length_smoothening_parameter"]
+    # Initialize level (intermittent demand) and period length
+    level = [train_y[0]]
+    period_length = [1]  # The first demand's period length (assuming the first non-zero value occurs at t=1)    
+    # Croston TSB Method Algorithm
+    for t in range(1, len(train_y)):
+        if train_y[t] != 0:
+            level.append(alpha * train_y[t] + (1 - alpha) * level[-1])
+            period_length.append(beta * (t - np.argmax(train_y[:t][::-1] != 0)) + (1 - beta) * period_length[-1])
+        else:
+            level.append(level[-1])
+            period_length.append(period_length[-1])
+    # Applying bias correction to improve prediction accuracy
+    level_corrected = [l / p if p != 0 else 0 for l, p in zip(level, period_length)]    
+    # Forecasting for the test period
+    forecast = []
+    for _ in range(len(test_y)):
+        forecast.append(level_corrected[-1])
+    forecast_combined = np.append(train_y, forecast)    
+    return forecast_combined
