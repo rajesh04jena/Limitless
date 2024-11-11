@@ -2,7 +2,7 @@
 
 `limitless_tsf` is an open-source time series forecasting library aimed at democratizing access to high-quality forecasting tools and challenging the status quo of expensive and arcane demand planning solutions offered by enterprise software giants like SAP APO, Kinaxis, Blue Yonder, O9 Solutions etc.
 
-By providing cutting-edge forecasting algorithms and easy-to-use APIs, **limitless_tsf** aims to empower businesses of all sizes with accurate, scalable, and customizable demand forecasting solutions. With `limitless_tsf`, companies can take control of their time series forecasting needs without relying on costly or difficult-to-integrate proprietary software.
+With `limitless_tsf`, companies can take control of their time series forecasting needs without relying on costly or difficult-to-integrate proprietary software.
 
 ---
 
