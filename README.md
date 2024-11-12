@@ -27,5 +27,24 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 - **Cross-Validation Support**: Built-in support for cross-validation and backtesting, allowing you to assess model performance and avoid overfitting.
 - **Visualization**: Built-in visualization tools to help you understand and interpret forecasts with ease.
 - **Open-Source**: Free and open-source, enabling wide adoption and contribution from the community.
+- **This library provides implementations for various time series forecasting models. Below is a sample list of available methods**
 
+| Models                         |
+|--------------------------------|
+| **Linear Regression**          |
+| **Seasonal Naive Forecast**    |
+| **Auto ARIMA**                 |
+| **Simple Exponential Smoothing** |
+| **Double Exponential Smoothing** |
+| **Holt-Winters**               |
+| **Croston TSB**                |
+| **TBATS**                      |
+| **Lasso Regression**           |
+| **Ridge Regression**           |
+| **Xgboost Regression**         |
+| **Prophet**                    |
+
+## **Usage**
+
+- **Coming Soon** - Building all the mentioned salient features diligently and will be rolled out by end of 2024
 

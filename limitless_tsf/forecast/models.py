@@ -18,6 +18,8 @@ from sklearn.preprocessing import (
 )
 import pmdarima as pm
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from tbats import TBATS
+
 
 def linear_regression_forecast(**kwargs):
     """
@@ -287,7 +289,6 @@ def holt_winters_forecast(**kwargs):
     """
     Holt-Winters forecasting using statsmodels with automatic model selection
     between additive and multiplicative based on training data.
-
     Parameters:
     - 'train_y': The training data (a numpy array or list).
     - 'test_y': The test data (a numpy array or list).
@@ -424,3 +425,55 @@ def croston_tsb_forecast(**kwargs):
         forecast.append(level_corrected[-1])
     forecast_combined = np.append(train_y, forecast)    
     return forecast_combined
+
+def tbats_forecast(**kwargs):
+    """
+    Perform a multi-seasonality forecast using the TBATS model, 
+    capturing multiple seasonalities in the time series.    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_y': The training time series data (a numpy array).
+        - 'test_len': The number of periods to forecast.
+        - 'seasonal_periods': A list of seasonal periods (e.g., [12, 7] for yearly and weekly seasonality).
+        - 'n_jobs': The number of jobs to run in parallel (default is -1 to use all available CPUs).
+    
+    Returns:
+    - Y_pred: The forecasted values for the test period, including the original training data.
+    - model: The fitted model 
+    #Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0,
+                       538.0, 118.0, 212.0, 103, 200,300 ]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  ,
+                       38506.0 , 84499.0 , 84004.0,71002, 16900,120301]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 120, 130, 140, 110, 115, 150, 160, 170, 165, 180, 190])
+    test_y = np.array([121, 0, 124, 0])
+    model_params = {'seasonal_periods' : [12,7]}
+    # Using kwargs to pass train_x, test_x, and season_length
+    predicted_test_y = tbats_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+                                       train_y =  train_y, model_params = model_params)
+    # Output the predicted values
+    print("Predicted Test Values:", predicted_test_y)
+    """    
+    # Extract values from kwargs    
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )
+    seasonal_periods = kwargs["model_params"]["seasonal_periods"]    
+    # Initialize TBATS model with seasonal periods
+    model = TBATS(seasonal_periods=seasonal_periods)    
+    # Fit the model on training data
+    fitted_model = model.fit(train_y)    
+    # Forecast the next 'test_len' periods
+    forecast = fitted_model.forecast(steps= len(test_y))    
+    # Combine the original training data with the forecasted values
+    Y_pred = np.append(train_y, forecast)    
+    return Y_pred, fitted_model
+
