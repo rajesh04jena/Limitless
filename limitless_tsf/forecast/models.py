@@ -19,7 +19,7 @@ from sklearn.preprocessing import (
 import pmdarima as pm
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from tbats import TBATS
-
+from prophet import Prophet
 
 def linear_regression_forecast(**kwargs):
     """
@@ -477,3 +477,99 @@ def tbats_forecast(**kwargs):
     Y_pred = np.append(train_y, forecast)    
     return Y_pred, fitted_model
 
+def prophet_forecast(**kwargs):
+    """
+    Perform forecasting using the Prophet model for time series data    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_y': The training time series data (a numpy array or pandas Series).
+        - 'test_len': The number of periods to forecast.
+        - 'train_x': The dates corresponding to the training time series (pandas DatetimeIndex).
+        - 'holidays_train': A dataframe of holidays for the training period (optional).
+        - 'holidays_future': A dataframe of holidays for the future prediction period (optional).
+        - 'n_changepoints': The number of potential changepoints (default is 25).
+        - 'changepoint_range': The proportion of history in which to place changepoints (default is 0.8).
+        - 'seasonality_prior_scale': The prior scale for seasonal components (default is 10.0).
+        - 'changepoint_prior_scale': The prior scale for changepoints (default is 0.05).
+        - 'interval_width': The width of the uncertainty intervals (default is 0.80).
+        - 'uncertainty_samples': The number of samples for uncertainty (default is 1000).    
+    Returns:
+    - Y_pred: The forecasted values for the test period, including the original training data.
+    # Example Usage:
+    # Generating some synthetic data for training
+    train_x = pd.date_range(start='2021-01-01', periods=100, freq='D')  # 100 days of data
+    train_y = np.sin(np.linspace(0, 10, 100)) * 20 + 100  # Synthetic time series data (sinusoidal pattern)
+    test_y =  pd.date_range(start='2021-04-11', periods=10, freq='D')
+    # Forecasting the next 10 days
+    test_len = len(test_y)
+    # Creating a DataFrame for holidays during the training period
+    holidays_train = pd.DataFrame({
+        'ds': pd.to_datetime(['2021-02-14', '2021-04-01', '2021-12-25']),  # Example holidays
+        'holiday': ['Valentine', 'Easter', 'Christmas']
+    })
+    # Creating a DataFrame for future holidays
+    holidays_future = pd.DataFrame({
+        'ds': pd.to_datetime(['2022-02-14', '2022-04-01', '2022-12-25']),  # Example future holidays
+        'holiday': ['Valentine', 'Easter', 'Christmas']
+    })
+    # Using Prophet to forecast with holiday effects and automatic seasonality mode selection
+    forecasted_data = prophet_forecast(
+        train_x=train_x,
+        train_y=train_y,
+        test_len=test_len,
+        holidays_train=holidays_train,
+        holidays_future=holidays_future
+    )
+    print("Forecasted Data: ", forecasted_data)
+    """
+    # Extract values from kwargs    
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )    
+    holidays_train = kwargs.get("holidays_train", None)  # Holidays during training
+    holidays_future = kwargs.get("holidays_future", None)  # Holidays during future prediction    
+    # Other hyperparameters
+    n_changepoints = kwargs.get("n_changepoints", 25)
+    changepoint_range = kwargs.get("changepoint_range", 0.8)
+    seasonality_prior_scale = kwargs.get("seasonality_prior_scale", 10.0)
+    changepoint_prior_scale = kwargs.get("changepoint_prior_scale", 0.05)
+    interval_width = kwargs.get("interval_width", 0.80)
+    uncertainty_samples = kwargs.get("uncertainty_samples", 1000)    
+    # Prepare the training data for Prophet
+    df_train = pd.DataFrame({'ds': train_x, 'y': train_y})    
+    # **Automatically select seasonality mode (additive or multiplicative) based on data:**
+    seasonality_mode = 'additive'  # Default to additive    
+    # Analyze the coefficient of variation (CV) to determine seasonality type
+    # CV = (Standard deviation of seasonal component) / (Mean of seasonal component)
+    seasonal_variation = np.std(train_y) / np.mean(train_y)    
+    if seasonal_variation > 0.2:
+        seasonality_mode = 'multiplicative'  # Use multiplicative if variance increases with level
+    else:
+        seasonality_mode = 'additive'  # Otherwise, use additive        
+    # Initialize the Prophet model with the passed parameters
+    model = Prophet(
+        holidays=holidays_train,
+        n_changepoints=n_changepoints,
+        changepoint_range=changepoint_range,
+        seasonality_mode=seasonality_mode,
+        seasonality_prior_scale=seasonality_prior_scale,
+        changepoint_prior_scale=changepoint_prior_scale,
+        interval_width=interval_width,
+        uncertainty_samples=uncertainty_samples
+    )    
+    # Fit the model to the training data
+    model.fit(df_train)    
+    # Prepare the future dataframe for prediction
+    future = model.make_future_dataframe(df_train, periods= len(test_y))    
+    # If holidays for future predictions are provided, include them
+    if holidays_future is not None:
+        future = future.merge(holidays_future, on='ds', how='left')
+    # Forecast the future
+    forecast = model.predict(future)    
+    # Extract the forecasted values
+    Y_pred = forecast['yhat'][-len(test_y):].values
+    Y_combined = np.append(train_y ,Y_pred)
+    return Y_combined, model
