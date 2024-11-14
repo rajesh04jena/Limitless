@@ -538,8 +538,10 @@ def prophet_forecast(**kwargs):
     changepoint_prior_scale = kwargs.get("changepoint_prior_scale", 0.05)
     interval_width = kwargs.get("interval_width", 0.80)
     uncertainty_samples = kwargs.get("uncertainty_samples", 1000)    
-    # Prepare the training data for Prophet
-    df_train = pd.DataFrame({'ds': train_x, 'y': train_y})    
+    # Prepare the training and test data for Prophet
+    df_train = pd.DataFrame({'ds': train_x, 'y': train_y})  
+    df_test = pd.DataFrame({'ds': test_x, 'y': test_y})  
+    
     # **Automatically select seasonality mode (additive or multiplicative) based on data:**
     seasonality_mode = 'additive'  # Default to additive    
     # Analyze the coefficient of variation (CV) to determine seasonality type
@@ -563,7 +565,7 @@ def prophet_forecast(**kwargs):
     # Fit the model to the training data
     model.fit(df_train)    
     # Prepare the future dataframe for prediction
-    future = model.make_future_dataframe(df_train, periods= len(test_y))    
+    future = model.make_future_dataframe(df_test, periods= len(test_y))    
     # If holidays for future predictions are provided, include them
     if holidays_future is not None:
         future = future.merge(holidays_future, on='ds', how='left')
