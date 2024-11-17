@@ -29,16 +29,16 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 - **Open-Source**: Free and open-source, enabling wide adoption and contribution from the community.
 - **This library provides implementations for various time series forecasting models. Below is a sample list of available methods**
 
-|  Multivariate Models           |  Univariate Models              |
-|--------------------------------|---------------------------------|
-| **Linear Regression**          | **Double Exponential Smoothing**|
-| **Lasso Regression**           | **Holt-Winters**                |
-| **Ridge Regression**           | **Croston TSB**                 |
-| **Xgboost Regression**         | **TBATS**                       |
-| **Light GBM Regression**       | **Seasonal Naive Forecast**     |
-| **Catboost Regression**        | **Auto ARIMA**                  |
-| **Random Forest Regression**   | **Simple Exponential Smoothing**|
-|                                | **Prophet**                     |
+|  Multivariate Models           |  Univariate Models              | Stacking Ensemble Model        |
+|--------------------------------|---------------------------------|--------------------------------|
+| **Linear Regression**          | **Double Exponential Smoothing**| **FFORMA**                     |
+| **Lasso Regression**           | **Holt-Winters**                | **Transformer Based Stacking** |
+| **Ridge Regression**           | **Croston TSB**                 | **LSTM Based Stacking**        |
+| **Xgboost Regression**         | **TBATS**                       | **Bayesian Stacking**          |
+| **Light GBM Regression**       | **Seasonal Naive Forecast**     | **Simple Average Stacking**    |
+| **Catboost Regression**        | **Auto ARIMA**                  |                                |
+| **Random Forest Regression**   | **Simple Exponential Smoothing**|                                |
+|                                | **Prophet**                     |                                |
 
 ## **Usage**
 
