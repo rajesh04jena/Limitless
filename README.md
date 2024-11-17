@@ -35,9 +35,9 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 | **Lasso Regression**           | **Holt-Winters**                |
 | **Ridge Regression**           | **Croston TSB**                 |
 | **Xgboost Regression**         | **TBATS**                       |
-|                                | **Seasonal Naive Forecast**     |
-|                                | **Auto ARIMA**                  |
-|                                | **Simple Exponential Smoothing**|
+| **Light GBM Regression**       | **Seasonal Naive Forecast**     |
+| **Catboost Regression**        | **Auto ARIMA**                  |
+| **Random Forest Regression**   | **Simple Exponential Smoothing**|
 |                                | **Prophet**                     |
 
 ## **Usage**

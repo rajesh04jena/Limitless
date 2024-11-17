@@ -20,6 +20,12 @@ import pmdarima as pm
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from tbats import TBATS
 from prophet import Prophet
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
+import xgboost as xgb
+from sklearn.ensemble import RandomForestRegressor
+import lightgbm as lgb
+import catboost as cb
 
 def linear_regression_forecast(**kwargs):
     """
@@ -76,6 +82,479 @@ def linear_regression_forecast(**kwargs):
         lr_model.predict(scaled_train_x), lr_model.predict(scaled_test_x)
     )
     return Y_pred, lr_model
+
+def lasso_regression_forecast(**kwargs):
+    """
+    Perform a Lasso regression forecast, predicting the value from the corresponding period in the training set.
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training exogenous/features data (a numpy array).
+        - 'test_x': The test exogenous/features data (a numpy array).
+        - 'train_y': The training time series data (a numpy array).
+        - 'test_y': The test time series data (a numpy array).
+        - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
+        - 'alpha': The regularization strength for the Lasso model (float).
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
+    - lasso_model: The fitted Lasso model.
+    #Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+    test_y = np.array([121, 122, 124, 123])
+    model_params = {'scaling_method' : 'MinMaxScaler' ,"alpha": 0.1 }
+    # Using kwargs to pass train_x, test_x, and season_length
+    predicted= lasso_regression_forecast(train_x= train_x , test_x=test_x ,
+                                          test_y = test_y, train_y =  train_y, 
+                                          model_params= model_params )
+    # Output the predicted values
+    print("Predicted In-Train and Test Values:", predicted)    
+    """
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )    
+    # Scaling the features
+    scaling_method = kwargs["model_params"].get("scaling_method", "MinMaxScaler")
+    if scaling_method == "StandardScaler":
+        scaler = StandardScaler()
+    elif scaling_method == "RobustScaler":
+        scaler = RobustScaler()
+    elif scaling_method == "MinMaxScaler":
+        scaler = MinMaxScaler()
+    elif scaling_method == "Normalizer":
+        scaler = Normalizer()
+    else:
+        scaler = MinMaxScaler()  # Default scaler
+    scaled_train_x = scaler.fit_transform(train_x)
+    scaled_test_x = scaler.transform(test_x)  
+    # Lasso regression model
+    alpha = kwargs["model_params"].get("alpha", 1.0)  # Default regularization strength is 1.0
+    lasso_model = Lasso(alpha=alpha)
+    lasso_model.fit(scaled_train_x, train_y)    
+    # Predicting values for both train and test data
+    Y_pred = np.append(
+        lasso_model.predict(scaled_train_x), lasso_model.predict(scaled_test_x)
+    )    
+    return Y_pred, lasso_model
+
+def ridge_regression_forecast(**kwargs):
+    """
+    Perform a Ridge regression forecast, predicting the value from the corresponding period in the training set.
+    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training exogenous/features data (a numpy array).
+        - 'test_x': The test exogenous/features data (a numpy array).
+        - 'train_y': The training time series data (a numpy array).
+        - 'test_y': The test time series data (a numpy array).
+        - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
+        - 'alpha': The regularization strength for the Ridge model (float).    
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
+    - ridge_model: The fitted Ridge model.
+    #Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+    test_y = np.array([121, 122, 124, 123])
+    model_params = {'scaling_method' : 'MinMaxScaler' ,"alpha": 0.1 }
+    # Using kwargs to pass train_x, test_x, and season_length
+    predicted= ridge_regression_forecast(train_x= train_x , test_x=test_x ,
+                                          test_y = test_y, train_y =  train_y, 
+                                          model_params= model_params )
+    # Output the predicted values
+    print("Predicted In-Train and Test Values:", predicted)    
+    """
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )    
+    # Scaling the features
+    scaling_method = kwargs["model_params"].get("scaling_method", "MinMaxScaler")
+    if scaling_method == "StandardScaler":
+        scaler = StandardScaler()
+    elif scaling_method == "RobustScaler":
+        scaler = RobustScaler()
+    elif scaling_method == "MinMaxScaler":
+        scaler = MinMaxScaler()
+    elif scaling_method == "Normalizer":
+        scaler = Normalizer()
+    else:
+        scaler = MinMaxScaler()  # Default scaler
+    scaled_train_x = scaler.fit_transform(train_x)
+    scaled_test_x = scaler.transform(test_x)  # Only use transform on the test set
+    # Ridge regression model
+    alpha = kwargs["model_params"].get("alpha", 1.0)  # Default regularization strength is 1.0
+    ridge_model = Ridge(alpha=alpha)
+    ridge_model.fit(scaled_train_x, train_y)    
+    # Predicting values for both train and test data
+    Y_pred = np.append(
+        ridge_model.predict(scaled_train_x), ridge_model.predict(scaled_test_x)
+    )    
+    return Y_pred, ridge_model
+
+def xgboost_regression_forecast(**kwargs):
+    """
+    Perform an XGBoost regression forecast, predicting the value from the corresponding period in the training set.
+    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training exogenous/features data (a numpy array).
+        - 'test_x': The test exogenous/features data (a numpy array).
+        - 'train_y': The training time series data (a numpy array).
+        - 'test_y': The test time series data (a numpy array).
+        - 'xgb_params': Dictionary containing hyperparameters for the XGBoost model.
+    
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
+    - xgb_model: The fitted XGBoost model.
+    #Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+    test_y = np.array([121, 122, 124, 123])   
+    Y_predicted, model = xgboost_regression_forecast(
+        train_x=train_x,
+        train_y=train_y,
+        test_x=test_x,
+        test_y=test_y,
+        xgb_params={        
+                "objective": "reg:squarederror",  # Regression task
+                "booster": "gbtree",  # Tree-based boosting
+                "n_estimators": 100,  # Number of boosting rounds
+                "learning_rate": 0.05,  # Learning rate
+                "max_depth": 6,  # Depth of each tree
+                "subsample": 0.8,  # Fraction of samples for each tree
+                "colsample_bytree": 0.8,  # Fraction of features per tree
+                "eval_metric": "rmse",  # Root Mean Squared Error for regression
+                "early_stopping_rounds": 10,  # Early stopping rounds        
+        }
+    )    
+    # Output the predicted values
+    print("Predicted In-Train and Test Values:", Y_predicted)        
+    """
+    # Extract arguments
+    train_x, train_y, test_x, test_y = (
+        kwargs["train_x"],
+        kwargs["train_y"],
+        kwargs["test_x"],
+        kwargs["test_y"],
+    )    
+    # Extract XGBoost hyperparameters
+    xgb_params = kwargs.get("xgb_params", {
+        "objective": "reg:squarederror",  # Default objective for regression
+        "booster": "gbtree",  # Tree-based boosting
+        "n_estimators": 100,  # Default number of trees
+        "learning_rate": 0.1,  # Step size shrinkage to improve robustness
+        "max_depth": 6,  # Maximum depth of trees
+        "min_child_weight": 1,  # Minimum sum of instance weight (hessian) needed in a child
+        "subsample": 1,  # Fraction of samples used for each tree
+        "colsample_bytree": 1,  # Fraction of features used for each tree
+        "colsample_bylevel": 1,  # Fraction of features used for each split level
+        "colsample_bynode": 1,  # Fraction of features used for each split node
+        "gamma": 0,  # Minimum loss reduction required to make a further partition
+        "scale_pos_weight": 1,  # Control the balance of positive and negative weights
+        "lambda": 1,  # L2 regularization term on weights
+        "alpha": 0,  # L1 regularization term on weights
+        "tree_method": "auto",  # Tree construction algorithm ("auto", "exact", "hist", "gpu_hist")
+        "eval_metric": "rmse",  # Evaluation metric (root mean square error for regression)
+        "early_stopping_rounds": 10,  # Stop training after this many rounds without improvement
+        "n_jobs": -1,  # Use all available CPUs
+    })    
+    # Initialize XGBoost model with specified hyperparameters
+    xgb_model = xgb.XGBRegressor(**xgb_params)    
+    # Fit the model
+    xgb_model.fit(train_x, train_y, 
+                  eval_set=[(test_x, test_y)],                   
+                  verbose=False)
+    # Predicting values for both train and test data
+    Y_pred = np.append(
+        xgb_model.predict(train_x), xgb_model.predict(test_x)
+    )    
+    return Y_pred, xgb_model
+
+def random_forest_regression_forecast(**kwargs):
+    """
+    Perform Random Forest Regression, predicting the value from the corresponding period in the training set.    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training features (a numpy array).
+        - 'test_x': The test features (a numpy array).
+        - 'train_y': The training target values (a numpy array).
+        - 'test_y': The test target values (a numpy array).
+        - 'model_params': Dictionary containing the hyperparameters for the Random Forest model.
+            - 'n_estimators': Number of trees in the forest (default is 100).
+            - 'max_depth': Maximum depth of the tree (default is None).
+            - 'min_samples_split': The minimum number of samples required to split an internal node (default is 2).
+            - 'min_samples_leaf': The minimum number of samples required to be at a leaf node (default is 1).
+            - 'max_features': The number of features to consider when looking for the best split (default is 'auto').
+            - 'max_samples': The number of samples to train each tree on, if using bootstrap sampling (default is None).
+            - 'bootstrap': Whether bootstrap samples are used when building trees (default is True).
+            - 'oob_score': Whether to use out-of-bag samples to estimate the generalization accuracy (default is False).
+            - 'n_jobs': The number of jobs to run in parallel for training the model (default is 1).
+            - 'random_state': Random seed for reproducibility.
+            - 'verbose': Controls the verbosity of the tree-building process.
+            - 'warm_start': Whether to reuse the solution of the previous call to fit and add more estimators (default is False).
+            - 'class_weight': Weights associated with classes, only applicable for classification.
+    
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - rf_model: The trained Random Forest model.
+    #Usage
+    model_params = {
+    "n_estimators": 200,
+    "max_depth": 10,
+    "min_samples_split": 5,
+    "min_samples_leaf": 3,
+    "max_features": 2,
+    "bootstrap": True,
+    "oob_score": True,
+    "n_jobs": -1,
+    "random_state": 42,
+    "verbose": 1,
+    "warm_start": False
+    }
+    # Call the Random Forest regression function
+    Y_pred, rf_model = random_forest_regression_forecast(
+        train_x=train_x,
+        train_y=train_y,
+        test_x=test_x,
+        test_y=test_y,
+        model_params=model_params
+    )
+    # Print the combined predictions
+    print("Predictions: ", Y_pred)
+    """    
+    # Extract input data
+    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    # Extract model parameters, using default values if not provided
+    model_params = kwargs.get("model_params", {})
+    n_estimators = model_params.get("n_estimators", 100)  # Default 100 trees
+    max_depth = model_params.get("max_depth", None)  # No limit on tree depth
+    min_samples_split = model_params.get("min_samples_split", 2)  # Default value 2
+    min_samples_leaf = model_params.get("min_samples_leaf", 1)  # Default value 1
+    max_features = model_params.get("max_features", 2)  # Default is 'auto' (sqrt of number of features)
+    max_samples = model_params.get("max_samples", None)  # Default is None (use all samples)
+    bootstrap = model_params.get("bootstrap", True)  # Default is True
+    oob_score = model_params.get("oob_score", False)  # Default is False
+    n_jobs = model_params.get("n_jobs", 1)  # Default is 1 (use a single core)
+    random_state = model_params.get("random_state", 42)  # Default random seed
+    verbose = model_params.get("verbose", 0)  # Default verbosity is 0 (silent)
+    warm_start = model_params.get("warm_start", False)  # Default is False (no warm start)
+    
+    # Initialize Random Forest Regressor with all the parameters
+    rf_model = RandomForestRegressor(
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        min_samples_split=min_samples_split,
+        min_samples_leaf=min_samples_leaf,
+        max_features=max_features,
+        max_samples=max_samples,
+        bootstrap=bootstrap,
+        oob_score=oob_score,
+        n_jobs=n_jobs,
+        random_state=random_state,
+        verbose=verbose,
+        warm_start=warm_start
+    )    
+    # Train the model on the training data
+    rf_model.fit(train_x, train_y)    
+    # Predict on both train and test sets
+    Y_train_pred = rf_model.predict(train_x)
+    Y_test_pred = rf_model.predict(test_x)    
+    # Combine train and test predictions into a single array
+    Y_pred = np.append(Y_train_pred, Y_test_pred)        
+    return Y_pred, rf_model
+
+def lightgbm_regression_forecast(**kwargs):
+    """
+    Perform LightGBM Regression, predicting the value from the corresponding period in the training set.    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training features (a numpy array or pandas DataFrame).
+        - 'test_x': The test features (a numpy array or pandas DataFrame).
+        - 'train_y': The training target values (a numpy array).
+        - 'test_y': The test target values (a numpy array).
+        - 'model_params': Dictionary containing the hyperparameters for the LightGBM model.
+            - 'boosting_type': Type of boosting ('gbdt', 'dart', 'goss').
+            - 'num_leaves': Maximum number of leaves in one tree.
+            - 'max_depth': Maximum depth of the tree.
+            - 'learning_rate': Step size for updating the model's weights.
+            - 'n_estimators': Number of boosting rounds (trees).
+            - 'objective': Objective function ('regression').
+            - 'metric': Evaluation metric ('l2' for regression).
+            - 'subsample': Fraction of data to use for each boosting round.
+            - 'colsample_bytree': Fraction of features to use for each tree.
+            - 'min_child_samples': Minimum number of data points required to create a new leaf.
+            - 'reg_alpha': L1 regularization term.
+            - 'reg_lambda': L2 regularization term.
+            - 'random_state': Random seed for reproducibility.
+            - 'n_jobs': Number of threads for parallel computation.
+    
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - lgb_model: The trained LightGBM model.
+    
+    #Usage
+    # Set the LightGBM hyperparameters
+    model_params = {
+        "boosting_type": "gbdt",
+        "num_leaves": 31,
+        "max_depth": 5,
+        "learning_rate": 0.05,
+        "n_estimators": 500,
+        "objective": "regression",
+        "metric": "l2",
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_samples": 20,
+        "reg_alpha": 0.1,
+        "reg_lambda": 0.1,
+        "random_state": 42,
+        "n_jobs": -1
+    }
+    # Call the LightGBM regression function
+    Y_pred, lgb_model = lightgbm_regression_forecast(
+        train_x=train_x,
+        train_y=train_y,
+        test_x=test_x,
+        test_y=test_y,
+        model_params=model_params
+    )
+    # Print the combined predictions
+    print("Predictions: ", Y_pred)
+    """    
+    # Extract input data
+    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    # Extract model parameters
+    model_params = kwargs.get("model_params", {})
+    boosting_type = model_params.get("boosting_type", "gbdt")  # Default: gbdt (Gradient Boosting Decision Trees)
+    num_leaves = model_params.get("num_leaves", 31)  # Default: 31
+    max_depth = model_params.get("max_depth", -1)  # Default: No limit
+    learning_rate = model_params.get("learning_rate", 0.1)  # Default: 0.1
+    n_estimators = model_params.get("n_estimators", 100)  # Default: 100 trees
+    objective = model_params.get("objective", "regression")  # Default: regression (for continuous target)
+    metric = model_params.get("metric", "l2")  # Default: l2 (Mean Squared Error)
+    subsample = model_params.get("subsample", 1.0)  # Default: 1 (use all data)
+    colsample_bytree = model_params.get("colsample_bytree", 1.0)  # Default: 1 (use all features)
+    min_child_samples = model_params.get("min_child_samples", 20)  # Default: 20
+    reg_alpha = model_params.get("reg_alpha", 0.0)  # L1 regularization
+    reg_lambda = model_params.get("reg_lambda", 0.0)  # L2 regularization
+    random_state = model_params.get("random_state", 42)  # Random seed
+    n_jobs = model_params.get("n_jobs", -1)  # Default: -1 (use all cores)
+    # Prepare LightGBM Dataset
+    train_data = lgb.Dataset(train_x, label=train_y)
+    test_data = lgb.Dataset(test_x, label=test_y, reference=train_data)
+    # Set up parameters for the model
+    params = {
+        "boosting_type": boosting_type,
+        "num_leaves": num_leaves,
+        "max_depth": max_depth,
+        "learning_rate": learning_rate,
+        "n_estimators": n_estimators,
+        "objective": objective,
+        "metric": metric,
+        "subsample": subsample,
+        "colsample_bytree": colsample_bytree,
+        "min_child_samples": min_child_samples,
+        "reg_alpha": reg_alpha,
+        "reg_lambda": reg_lambda,
+        "random_state": random_state,
+        "n_jobs": n_jobs
+    }
+    # Train the LightGBM model
+    lgb_model = lgb.train(
+        params,
+        train_data,
+        valid_sets=[test_data]               
+    )
+    # Predict on both train and test sets
+    Y_train_pred = lgb_model.predict(train_x, num_iteration=lgb_model.best_iteration)
+    Y_test_pred = lgb_model.predict(test_x, num_iteration=lgb_model.best_iteration)    
+    # Combine train and test predictions into a single array
+    Y_pred = np.append(Y_train_pred, Y_test_pred)    
+    return Y_pred, lgb_model
+
+def catboost_regression_forecast(**kwargs):
+    """
+    Perform CatBoost Regression, predicting the value from the corresponding period in the training set.    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training features (a numpy array or pandas DataFrame).
+        - 'test_x': The test features (a numpy array or pandas DataFrame).
+        - 'train_y': The training target values (a numpy array).
+        - 'test_y': The test target values (a numpy array).
+        - 'model_params': Dictionary containing the hyperparameters for the CatBoost model.
+            - 'iterations': Number of boosting iterations (trees).
+            - 'learning_rate': Step size for updating model weights.
+            - 'depth': Depth of the trees.
+            - 'l2_leaf_reg': L2 regularization term on leaf values.
+            - 'loss_function': The loss function ('RMSE' for regression).
+            - 'metric_period': Period for printing metrics during training.
+            - 'random_state': Random seed for reproducibility.
+            - 'cat_features': List of categorical feature indices (if any).
+            - 'verbose': Whether to print training process logs (default is False).
+            - 'thread_count': Number of threads to use for parallel computation.
+
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - catboost_model: The trained CatBoost model.
+    """    
+    # Extract input data
+    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    # Extract model parameters
+    model_params = kwargs.get("model_params", {})
+    iterations = model_params.get("iterations", 1000)  # Number of boosting iterations (default 1000)
+    learning_rate = model_params.get("learning_rate", 0.1)  # Learning rate (default 0.1)
+    depth = model_params.get("depth", 6)  # Depth of trees (default 6)
+    l2_leaf_reg = model_params.get("l2_leaf_reg", 3.0)  # L2 regularization (default 3.0)
+    loss_function = model_params.get("loss_function", "RMSE")  # Loss function (default: RMSE for regression)
+    metric_period = model_params.get("metric_period", 100)  # Print metrics every `metric_period` iterations
+    random_state = model_params.get("random_state", 42)  # Random seed for reproducibility
+    cat_features = model_params.get("cat_features", None)  # Categorical feature indices (default: None)
+    verbose = model_params.get("verbose", False)  # Whether to print logs during training (default: False)
+    thread_count = model_params.get("thread_count", -1)  # Number of threads to use (-1 means use all available cores)
+    # Initialize CatBoost Regressor
+    catboost_model = cb.CatBoostRegressor(
+        iterations=iterations,
+        learning_rate=learning_rate,
+        depth=depth,
+        l2_leaf_reg=l2_leaf_reg,
+        loss_function=loss_function,
+        metric_period=metric_period,
+        random_state=random_state,
+        cat_features=cat_features,
+        verbose=verbose,
+        thread_count=thread_count
+    )
+    # Train the CatBoost model
+    catboost_model.fit(train_x, train_y)
+    # Predict on both train and test sets
+    Y_train_pred = catboost_model.predict(train_x)
+    Y_test_pred = catboost_model.predict(test_x)    
+    # Combine train and test predictions into a single array
+    Y_pred = np.append(Y_train_pred, Y_test_pred)
+    return Y_pred, catboost_model
 
 def seasonal_naive_forecast(**kwargs):
     """
