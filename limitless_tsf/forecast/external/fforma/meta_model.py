@@ -5,9 +5,63 @@ from collections import ChainMap
 from functools import partial
 from itertools import product
 from copy import deepcopy
-
 from sklearn.utils.validation import check_is_fitted
-from ESRNN.utils_evaluation import smape, mase, evaluate_panel
+
+
+def smape(y, y_hat):
+  return smape
+
+def mase(y, y_hat, y_train, seasonality):
+  return mase
+
+def evaluate_panel(y_panel, y_hat_panel, metric,
+                   y_insample=None, seasonality=None):
+  """
+  Calculates metric for y_panel and y_hat_panel
+  y_panel: pandas df
+    panel with columns unique_id, ds, y
+  y_naive2_panel: pandas df
+    panel with columns unique_id, ds, y_hat
+  y_insample: pandas df
+    panel with columns unique_id, ds, y (train)
+    this is used in the MASE
+  seasonality: int
+    main frequency of the time series
+    Quarterly 4, Daily 7, Monthly 12
+  return: list of metric evaluations
+  """
+  metric_name = metric.__code__.co_name
+
+  y_panel = y_panel.sort_values(['unique_id', 'ds'])
+  y_hat_panel = y_hat_panel.sort_values(['unique_id', 'ds'])
+  if y_insample is not None:
+      y_insample = y_insample.sort_values(['unique_id', 'ds'])
+
+  assert len(y_panel)==len(y_hat_panel)
+  assert all(y_panel.unique_id.unique() == y_hat_panel.unique_id.unique()), "not same u_ids"
+
+  evaluation = []
+  for u_id in y_panel.unique_id.unique():
+    top_row = np.asscalar(y_panel['unique_id'].searchsorted(u_id, 'left'))
+    bottom_row = np.asscalar(y_panel['unique_id'].searchsorted(u_id, 'right'))
+    y_id = y_panel[top_row:bottom_row].y.to_numpy()
+
+    top_row = np.asscalar(y_hat_panel['unique_id'].searchsorted(u_id, 'left'))
+    bottom_row = np.asscalar(y_hat_panel['unique_id'].searchsorted(u_id, 'right'))
+    y_hat_id = y_hat_panel[top_row:bottom_row].y_hat.to_numpy()
+    assert len(y_id)==len(y_hat_id)
+
+    if metric_name == 'mase':
+      assert (y_insample is not None) and (seasonality is not None)
+      top_row = np.asscalar(y_insample['unique_id'].searchsorted(u_id, 'left'))
+      bottom_row = np.asscalar(y_insample['unique_id'].searchsorted(u_id, 'right'))
+      y_insample_id = y_insample[top_row:bottom_row].y.to_numpy()
+      evaluation_id = metric(y_id, y_hat_id, y_insample_id, seasonality)
+    else:
+      evaluation_id = metric(y_id, y_hat_id)
+    evaluation.append(evaluation_id)
+  return evaluation
+
 
 
 class MetaModels:
