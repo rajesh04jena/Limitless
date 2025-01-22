@@ -292,6 +292,115 @@ def xgboost_regression_forecast(**kwargs):
     
     return Y_fitted, Y_pred, xgb_model
 
+def lightgbm_regression_forecast(**kwargs):
+    """
+    Perform LightGBM Regression, predicting the value from the corresponding period in the training set.    
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training features (a numpy array or pandas DataFrame).
+        - 'test_x': The test features (a numpy array or pandas DataFrame).
+        - 'train_y': The training target values (a numpy array).
+        - 'test_y': The test target values (a numpy array).
+        - 'model_params': Dictionary containing the hyperparameters for the LightGBM model.
+            - 'boosting_type': Type of boosting ('gbdt', 'dart', 'goss').
+            - 'num_leaves': Maximum number of leaves in one tree.
+            - 'max_depth': Maximum depth of the tree.
+            - 'learning_rate': Step size for updating the model's weights.
+            - 'n_estimators': Number of boosting rounds (trees).
+            - 'objective': Objective function ('regression').
+            - 'metric': Evaluation metric ('l2' for regression).
+            - 'subsample': Fraction of data to use for each boosting round.
+            - 'colsample_bytree': Fraction of features to use for each tree.
+            - 'min_child_samples': Minimum number of data points required to create a new leaf.
+            - 'reg_alpha': L1 regularization term.
+            - 'reg_lambda': L2 regularization term.
+            - 'random_state': Random seed for reproducibility.
+            - 'n_jobs': Number of threads for parallel computation.
+    
+    Returns:
+    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - lgb_model: The trained LightGBM model.
+    
+    #Usage
+    # Set the LightGBM hyperparameters
+    model_params = {
+        "boosting_type": "gbdt",
+        "num_leaves": 31,
+        "max_depth": 5,
+        "learning_rate": 0.05,
+        "n_estimators": 500,
+        "objective": "regression",
+        "metric": "l2",
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_samples": 20,
+        "reg_alpha": 0.1,
+        "reg_lambda": 0.1,
+        "random_state": 42,
+        "n_jobs": -1
+    }    
+    # Call the LightGBM regression function
+    fitted, predicted, model = lightgbm_regression_forecast(
+        train_x=train_x,
+        train_y=train_y,
+        test_x=test_x,
+        test_y=test_y,
+        model_params=model_params
+    )    
+    # Print the combined predictions
+    print("Predictions: ", predicted)
+    """    
+    # Extract input data
+    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    # Extract model parameters
+    model_params = kwargs.get("model_params", {})
+    boosting_type = model_params.get("boosting_type", "gbdt")  # Default: gbdt (Gradient Boosting Decision Trees)
+    num_leaves = model_params.get("num_leaves", 31)  # Default: 31
+    max_depth = model_params.get("max_depth", -1)  # Default: No limit
+    learning_rate = model_params.get("learning_rate", 0.1)  # Default: 0.1
+    n_estimators = model_params.get("n_estimators", 100)  # Default: 100 trees
+    objective = model_params.get("objective", "regression")  # Default: regression (for continuous target)
+    metric = model_params.get("metric", "l2")  # Default: l2 (Mean Squared Error)
+    subsample = model_params.get("subsample", 1.0)  # Default: 1 (use all data)
+    colsample_bytree = model_params.get("colsample_bytree", 1.0)  # Default: 1 (use all features)
+    min_child_samples = model_params.get("min_child_samples", 20)  # Default: 20
+    reg_alpha = model_params.get("reg_alpha", 0.0)  # L1 regularization
+    reg_lambda = model_params.get("reg_lambda", 0.0)  # L2 regularization
+    random_state = model_params.get("random_state", 42)  # Random seed
+    n_jobs = model_params.get("n_jobs", -1)  # Default: -1 (use all cores)
+    # Prepare LightGBM Dataset
+    train_data = lgb.Dataset(train_x, label=train_y)
+    test_data = lgb.Dataset(test_x, label=test_y, reference=train_data)
+    # Set up parameters for the model
+    params = {
+        "boosting_type": boosting_type,
+        "num_leaves": num_leaves,
+        "max_depth": max_depth,
+        "learning_rate": learning_rate,
+        "n_estimators": n_estimators,
+        "objective": objective,
+        "metric": metric,
+        "subsample": subsample,
+        "colsample_bytree": colsample_bytree,
+        "min_child_samples": min_child_samples,
+        "reg_alpha": reg_alpha,
+        "reg_lambda": reg_lambda,
+        "random_state": random_state,
+        "n_jobs": n_jobs
+    }
+    # Train the LightGBM model
+    lgb_model = lgb.train(
+        params,
+        train_data,
+        valid_sets=[test_data]               
+    )
+    # Predict on both train and test sets
+    # Combine train and test predictions into a single array
+    Y_fitted = lgb_model.predict(train_x, num_iteration=lgb_model.best_iteration)
+    Y_pred = lgb_model.predict(test_x, num_iteration=lgb_model.best_iteration)    
+    return Y_fitted, Y_pred, lgb_model
+
+
 def random_forest_regression_forecast(**kwargs):
     """
     Perform Random Forest Regression, predicting the value from the corresponding period in the training set.    
@@ -385,120 +494,6 @@ def random_forest_regression_forecast(**kwargs):
     Y_pred = np.append(Y_train_pred, Y_test_pred)        
     return Y_pred, rf_model
 
-
-
-
-
-
-
-def lightgbm_regression_forecast(**kwargs):
-    """
-    Perform LightGBM Regression, predicting the value from the corresponding period in the training set.    
-    Parameters:
-    - kwargs: Keyword arguments that can include:
-        - 'train_x': The training features (a numpy array or pandas DataFrame).
-        - 'test_x': The test features (a numpy array or pandas DataFrame).
-        - 'train_y': The training target values (a numpy array).
-        - 'test_y': The test target values (a numpy array).
-        - 'model_params': Dictionary containing the hyperparameters for the LightGBM model.
-            - 'boosting_type': Type of boosting ('gbdt', 'dart', 'goss').
-            - 'num_leaves': Maximum number of leaves in one tree.
-            - 'max_depth': Maximum depth of the tree.
-            - 'learning_rate': Step size for updating the model's weights.
-            - 'n_estimators': Number of boosting rounds (trees).
-            - 'objective': Objective function ('regression').
-            - 'metric': Evaluation metric ('l2' for regression).
-            - 'subsample': Fraction of data to use for each boosting round.
-            - 'colsample_bytree': Fraction of features to use for each tree.
-            - 'min_child_samples': Minimum number of data points required to create a new leaf.
-            - 'reg_alpha': L1 regularization term.
-            - 'reg_lambda': L2 regularization term.
-            - 'random_state': Random seed for reproducibility.
-            - 'n_jobs': Number of threads for parallel computation.
-    
-    Returns:
-    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
-    - lgb_model: The trained LightGBM model.
-    
-    #Usage
-    # Set the LightGBM hyperparameters
-    model_params = {
-        "boosting_type": "gbdt",
-        "num_leaves": 31,
-        "max_depth": 5,
-        "learning_rate": 0.05,
-        "n_estimators": 500,
-        "objective": "regression",
-        "metric": "l2",
-        "subsample": 0.8,
-        "colsample_bytree": 0.8,
-        "min_child_samples": 20,
-        "reg_alpha": 0.1,
-        "reg_lambda": 0.1,
-        "random_state": 42,
-        "n_jobs": -1
-    }
-    # Call the LightGBM regression function
-    Y_pred, lgb_model = lightgbm_regression_forecast(
-        train_x=train_x,
-        train_y=train_y,
-        test_x=test_x,
-        test_y=test_y,
-        model_params=model_params
-    )
-    # Print the combined predictions
-    print("Predictions: ", Y_pred)
-    """    
-    # Extract input data
-    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
-    # Extract model parameters
-    model_params = kwargs.get("model_params", {})
-    boosting_type = model_params.get("boosting_type", "gbdt")  # Default: gbdt (Gradient Boosting Decision Trees)
-    num_leaves = model_params.get("num_leaves", 31)  # Default: 31
-    max_depth = model_params.get("max_depth", -1)  # Default: No limit
-    learning_rate = model_params.get("learning_rate", 0.1)  # Default: 0.1
-    n_estimators = model_params.get("n_estimators", 100)  # Default: 100 trees
-    objective = model_params.get("objective", "regression")  # Default: regression (for continuous target)
-    metric = model_params.get("metric", "l2")  # Default: l2 (Mean Squared Error)
-    subsample = model_params.get("subsample", 1.0)  # Default: 1 (use all data)
-    colsample_bytree = model_params.get("colsample_bytree", 1.0)  # Default: 1 (use all features)
-    min_child_samples = model_params.get("min_child_samples", 20)  # Default: 20
-    reg_alpha = model_params.get("reg_alpha", 0.0)  # L1 regularization
-    reg_lambda = model_params.get("reg_lambda", 0.0)  # L2 regularization
-    random_state = model_params.get("random_state", 42)  # Random seed
-    n_jobs = model_params.get("n_jobs", -1)  # Default: -1 (use all cores)
-    # Prepare LightGBM Dataset
-    train_data = lgb.Dataset(train_x, label=train_y)
-    test_data = lgb.Dataset(test_x, label=test_y, reference=train_data)
-    # Set up parameters for the model
-    params = {
-        "boosting_type": boosting_type,
-        "num_leaves": num_leaves,
-        "max_depth": max_depth,
-        "learning_rate": learning_rate,
-        "n_estimators": n_estimators,
-        "objective": objective,
-        "metric": metric,
-        "subsample": subsample,
-        "colsample_bytree": colsample_bytree,
-        "min_child_samples": min_child_samples,
-        "reg_alpha": reg_alpha,
-        "reg_lambda": reg_lambda,
-        "random_state": random_state,
-        "n_jobs": n_jobs
-    }
-    # Train the LightGBM model
-    lgb_model = lgb.train(
-        params,
-        train_data,
-        valid_sets=[test_data]               
-    )
-    # Predict on both train and test sets
-    Y_train_pred = lgb_model.predict(train_x, num_iteration=lgb_model.best_iteration)
-    Y_test_pred = lgb_model.predict(test_x, num_iteration=lgb_model.best_iteration)    
-    # Combine train and test predictions into a single array
-    Y_pred = np.append(Y_train_pred, Y_test_pred)    
-    return Y_pred, lgb_model
 
 def catboost_regression_forecast(**kwargs):
     """
