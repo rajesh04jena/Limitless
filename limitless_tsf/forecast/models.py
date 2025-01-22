@@ -158,8 +158,8 @@ def ridge_regression_forecast(**kwargs):
         - 'alpha': The regularization strength for the Ridge model (float).    
     Returns:
     - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
-    - ridge_model: The fitted Ridge model.
-    #Example Usage:
+    - ridge_model: The fitted Ridge model.    
+    Example Usage:  
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -171,11 +171,11 @@ def ridge_regression_forecast(**kwargs):
     test_y = np.array([121, 122, 124, 123])
     model_params = {'scaling_method' : 'MinMaxScaler' ,"alpha": 0.1 }
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted= ridge_regression_forecast(train_x= train_x , test_x=test_x ,
-                                          test_y = test_y, train_y =  train_y, 
-                                          model_params= model_params )
+    fitted, predicted, ridge_model = ridge_regression_forecast(train_x= train_x , test_x=test_x ,
+                                      test_y = test_y, train_y =  train_y, 
+                                      model_params= model_params )
     # Output the predicted values
-    print("Predicted In-Train and Test Values:", predicted)    
+    print("Predicted Test Data Values:", predicted)    
     """
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
@@ -202,10 +202,10 @@ def ridge_regression_forecast(**kwargs):
     ridge_model = Ridge(alpha=alpha)
     ridge_model.fit(scaled_train_x, train_y)    
     # Predicting values for both train and test data
-    Y_pred = np.append(
-        ridge_model.predict(scaled_train_x), ridge_model.predict(scaled_test_x)
-    )    
-    return Y_pred, ridge_model
+    Y_fitted = ridge_model.predict(scaled_train_x)
+    Y_pred = ridge_model.predict(scaled_test_x)
+        
+    return Y_fitted, Y_pred, ridge_model
 
 def xgboost_regression_forecast(**kwargs):
     """
