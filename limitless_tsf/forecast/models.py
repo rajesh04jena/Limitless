@@ -207,7 +207,6 @@ def ridge_regression_forecast(**kwargs):
         
     return Y_fitted, Y_pred, ridge_model
 
-
 def xgboost_regression_forecast(**kwargs):
     """
     Perform an XGBoost regression forecast, predicting the value from the corresponding period in the training set.
@@ -385,6 +384,12 @@ def random_forest_regression_forecast(**kwargs):
     # Combine train and test predictions into a single array
     Y_pred = np.append(Y_train_pred, Y_test_pred)        
     return Y_pred, rf_model
+
+
+
+
+
+
 
 def lightgbm_regression_forecast(**kwargs):
     """

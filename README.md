@@ -42,5 +42,5 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 
 ## **Usage**
 
-- **Coming Soon** - Building all the mentioned salient features diligently and will be rolled out by end of 2024
+- **Coming Soon** - All the mentioned salient features will be rolled out soon and will replace your incumbent and expensive forecasting tool
 
