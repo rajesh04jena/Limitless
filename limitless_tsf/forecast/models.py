@@ -1,6 +1,6 @@
 ################################################################################
 # Name: models.py
-# Purpose: Generate time series predictions using different statiscal and ML models
+# Purpose: Generate time series predictions using different statistical and ML models
 # Date                          Version                Created By
 # 8-Nov-2024                  1.0         Rajesh Kumar Jena(Initial Version)
 ################################################################################
@@ -25,7 +25,7 @@ from sklearn.linear_model import Ridge
 import xgboost as xgb
 from sklearn.ensemble import RandomForestRegressor
 import lightgbm as lgb
-import catboost as cb
+#import catboost as cb
 
 def linear_regression_forecast(**kwargs):
     """
@@ -39,7 +39,8 @@ def linear_regression_forecast(**kwargs):
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators
     Returns:
     - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
-    Example Usage:
+   
+   
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -51,12 +52,11 @@ def linear_regression_forecast(**kwargs):
     test_y = np.array([121, 122, 124, 123])
     model_params = {'scaling_method' : 'MinMaxScaler' }
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted= linear_regression_forecast(train_x= train_x , test_x=test_x ,
+    fitted , predicted , lr_model = linear_regression_forecast(train_x= train_x , test_x=test_x ,
                                           test_y = test_y, train_y =  train_y, model_params= model_params )
     # Output the predicted values
-    print("Predicted In-Train and Test Values:", predicted)
-    """
-
+    print("Predicted Test Values:", predicted)
+   """
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
         kwargs["train_y"],
@@ -77,11 +77,10 @@ def linear_regression_forecast(**kwargs):
     scaled_train_x = scaler.fit_transform(train_x)
     scaled_test_x = scaler.fit_transform(test_x)
     lr_model = LinearRegression()
-    lr_model.fit(scaled_train_x, train_y)
-    Y_pred = np.append(
-        lr_model.predict(scaled_train_x), lr_model.predict(scaled_test_x)
-    )
-    return Y_pred, lr_model
+    lr_model.fit(scaled_train_x, train_y)    
+    Y_fitted = lr_model.predict(scaled_train_x)    
+    Y_pred = lr_model.predict(scaled_test_x)    
+    return Y_fitted, Y_pred, lr_model
 
 def lasso_regression_forecast(**kwargs):
     """

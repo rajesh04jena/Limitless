@@ -5,10 +5,10 @@ import lightgbm as lgb
 import copy
 from sklearn.model_selection import StratifiedKFold
 from scipy.special import softmax
-from external.tsfeatures.tsfeatures import tsfeatures
+from forecast.external.tsfeatures.tsfeatures import tsfeatures
 from math import isclose
-from external.fforma.utils_input import _check_valid_df, _check_same_type, _check_passed_dfs, _check_valid_columns
-from external.fforma.utils_models import _train_lightgbm, _train_lightgbm_cv, _train_lightgbm_grid_search
+from forecast.external.fforma.utils_input import _check_valid_df, _check_same_type, _check_passed_dfs, _check_valid_columns
+from forecast.external.fforma.utils_models import _train_lightgbm, _train_lightgbm_cv, _train_lightgbm_grid_search
 
 
 class FFORMA:
