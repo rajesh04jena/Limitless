@@ -207,6 +207,7 @@ def ridge_regression_forecast(**kwargs):
         
     return Y_fitted, Y_pred, ridge_model
 
+
 def xgboost_regression_forecast(**kwargs):
     """
     Perform an XGBoost regression forecast, predicting the value from the corresponding period in the training set.
@@ -231,8 +232,8 @@ def xgboost_regression_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])   
-    Y_predicted, model = xgboost_regression_forecast(
+    test_y = np.array([121, 122, 124, 123]) 
+    fitted, predicted, model = xgboost_regression_forecast(
         train_x=train_x,
         train_y=train_y,
         test_x=test_x,
@@ -250,7 +251,7 @@ def xgboost_regression_forecast(**kwargs):
         }
     )    
     # Output the predicted values
-    print("Predicted In-Train and Test Values:", Y_predicted)        
+    print("Predicted Test Values:", predicted)        
     """
     # Extract arguments
     train_x, train_y, test_x, test_y = (
@@ -287,10 +288,10 @@ def xgboost_regression_forecast(**kwargs):
                   eval_set=[(test_x, test_y)],                   
                   verbose=False)
     # Predicting values for both train and test data
-    Y_pred = np.append(
-        xgb_model.predict(train_x), xgb_model.predict(test_x)
-    )    
-    return Y_pred, xgb_model
+    Y_fitted =  xgb_model.predict(train_x)
+    Y_pred = xgb_model.predict(test_x)
+    
+    return Y_fitted, Y_pred, xgb_model
 
 def random_forest_regression_forecast(**kwargs):
     """
