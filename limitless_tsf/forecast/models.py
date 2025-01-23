@@ -38,7 +38,9 @@ def linear_regression_forecast(**kwargs):
         - 'test_y': The test time series data (a numpy array).
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators
     Returns:
-    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - lr_model : The fitted linear regression model.
     #Example Usage:   
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -94,7 +96,8 @@ def lasso_regression_forecast(**kwargs):
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
         - 'alpha': The regularization strength for the Lasso model (float).
     Returns:
-    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
     - lasso_model: The fitted Lasso model.
     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
@@ -318,7 +321,8 @@ def lightgbm_regression_forecast(**kwargs):
             - 'n_jobs': Number of threads for parallel computation.
     
     Returns:
-    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
     - lgb_model: The trained LightGBM model.
     
     #Usage
@@ -400,7 +404,6 @@ def lightgbm_regression_forecast(**kwargs):
     Y_pred = lgb_model.predict(test_x, num_iteration=lgb_model.best_iteration)    
     return Y_fitted, Y_pred, lgb_model
 
-
 def random_forest_regression_forecast(**kwargs):
     """
     Perform Random Forest Regression, predicting the value from the corresponding period in the training set.    
@@ -426,8 +429,10 @@ def random_forest_regression_forecast(**kwargs):
             - 'class_weight': Weights associated with classes, only applicable for classification.
     
     Returns:
-    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
     - rf_model: The trained Random Forest model.
+    Usage:
     #Usage
     model_params = {
     "n_estimators": 200,
@@ -443,15 +448,16 @@ def random_forest_regression_forecast(**kwargs):
     "warm_start": False
     }
     # Call the Random Forest regression function
-    Y_pred, rf_model = random_forest_regression_forecast(
+    fitted, predicted, model = random_forest_regression_forecast(
         train_x=train_x,
         train_y=train_y,
         test_x=test_x,
         test_y=test_y,
         model_params=model_params
     )
+    
     # Print the combined predictions
-    print("Predictions: ", Y_pred)
+    print("Predictions: ", predicted)            
     """    
     # Extract input data
     train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
@@ -488,12 +494,12 @@ def random_forest_regression_forecast(**kwargs):
     # Train the model on the training data
     rf_model.fit(train_x, train_y)    
     # Predict on both train and test sets
-    Y_train_pred = rf_model.predict(train_x)
-    Y_test_pred = rf_model.predict(test_x)    
+   
     # Combine train and test predictions into a single array
-    Y_pred = np.append(Y_train_pred, Y_test_pred)        
-    return Y_pred, rf_model
-
+    Y_fitted = rf_model.predict(train_x)
+    Y_pred = rf_model.predict(test_x)  
+       
+    return Y_fitted, Y_pred, rf_model
 
 def catboost_regression_forecast(**kwargs):
     """
