@@ -562,6 +562,33 @@ def catboost_regression_forecast(**kwargs):
     Y_pred = np.append(Y_train_pred, Y_test_pred)
     return Y_pred, catboost_model
 
+class SeasonalNaiveModel:
+    """
+    A lightweight class to represent the seasonal naive forecasting model.
+    This class provides information about the model type and the seasonal length.
+    """
+    def __init__(self, season_length):
+        """
+        Initialize the SeasonalNaiveModel with the seasonal length.
+        
+        Parameters:
+        - season_length: The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
+        """
+        self.model_type = "Seasonal Naive Forecast"
+        self.season_length = season_length
+
+    def get_model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return self.model_type
+
+    def get_season_length(self):
+        """
+        Returns the seasonal length used in the model.
+        """
+        return self.season_length
+
 def seasonal_naive_forecast(**kwargs):
     """
     Perform a seasonal naive forecast, predicting the value from the corresponding period in the training set.
@@ -571,7 +598,10 @@ def seasonal_naive_forecast(**kwargs):
         - 'test_y': The test time series data (a numpy array).
         - 'season_length': The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
     Returns:
-    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The details about naive model parameters.
+    
     Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -584,12 +614,11 @@ def seasonal_naive_forecast(**kwargs):
     test_y = np.array([121, 122, 124, 123])
     model_params = {'season_length' : 12 }
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted= seasonal_naive_forecast(train_x= train_x , test_x=test_x , test_y = test_y, 
-                                       train_y =  train_y, model_params= model_params )
+    fitted, predicted, model = seasonal_naive_forecast(train_x= train_x , test_x=test_x , test_y = test_y, 
+                                       train_y =  train_y, model_params= model_params )    
     # Output the predicted values
-    print("Predicted In-Train and Test Values:", predicted)
-    """
-    
+    print("Predicted Test Values:", predicted)
+    """    
     # Extract values from kwargs
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
@@ -609,8 +638,10 @@ def seasonal_naive_forecast(**kwargs):
         predicted_test_y[i] = train_y[
             -season_length + season_index
         ]  # Seasonal index in training set
-    Y_pred = np.append(train_y, predicted_test_y)
-    return Y_pred
+    Y_fitted = train_y
+    Y_pred =  predicted_test_y
+    model = SeasonalNaiveModel(season_length=season_length)    
+    return Y_fitted, Y_pred, model
 
 def auto_arima_forecast(**kwargs):
     """
@@ -622,8 +653,10 @@ def auto_arima_forecast(**kwargs):
         - 'season_length': The length of the seasonal period (optional, defaults to None).
         - Other parameters for `auto_arima` (e.g., 'm' for seasonality, 'start_p', 'start_q', etc.).
     Returns:
-    - predicted_test_y: A numpy array containing the predicted values for the test set.
-    Example Usage:
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The details about arima model parameters.
+    Example Usage: 
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -635,11 +668,11 @@ def auto_arima_forecast(**kwargs):
     test_y = np.array([121, 122, 124, 123])
     model_params = {'season_length' : 12 }
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted_test_y = auto_arima_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model = auto_arima_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
                                            train_y =  train_y, model_params = model_params)
     # Output the predicted values
-    print("Predicted Test Values:", predicted_test_y)
-    """
+    print("Predicted Test Values:", predicted)
+   """
     # Extract values from kwargs
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
@@ -669,11 +702,41 @@ def auto_arima_forecast(**kwargs):
             suppress_warnings=True,
         )
     # Make forecasts for the test set and append the in-train values
-    predicted_test_y = model.predict(n_periods=len(test_y))
-    Y_pred = np.append(train_y, predicted_test_y)
-    return Y_pred, model
+    
+    Y_fitted = train_y
+    Y_pred =  model.predict(n_periods=len(test_y))
+    
+    return Y_fitted, Y_pred, model
+
+class SimpleExponentialSmoothingModel:
+    """
+    A lightweight class to represent the Simple Exponential Smoothing Model.
+    This class provides information about the model type and the smoothening_parameter.
+    """
+    def __init__(self, smoothening_parameter):
+        """
+        Initialize the SimpleExponentialSmoothingModel with smoothening parameter.
+        
+        Parameters:
+        - smoothening_parameter: alpha also known as the Smoothing parameter (0 < alpha < 1)
+        """
+        self.model_type = "SimpleExponentialSmoothingModel"
+        self.smoothening_parameter = smoothening_parameter
+
+    def get_model_type(self):
+        """
+        Returns the type of the model.
+        """
+        return self.model_type
+
+    def get_smoothening_parameter(self):
+        """
+        Returns Smoothing parameter used in the model.
+        """
+        return self.smoothening_parameter
 
 def simple_exponential_smoothing(**kwargs):
+        
     """
     Simple Exponential Smoothing (SES)
     Parameters (via kwargs):
@@ -681,8 +744,11 @@ def simple_exponential_smoothing(**kwargs):
     - 'test_y': The test data (a numpy array or list).
     - alpha: Smoothing parameter (0 < alpha < 1).
     Returns:
-    - forecast: Array of predicted values using SES.
-    #Example Usage:
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The details about SES model parameters.
+    
+    #Example Usage:    
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -694,10 +760,10 @@ def simple_exponential_smoothing(**kwargs):
     test_y = np.array([121, 122, 124, 123])
     model_params = {'smoothening_parameter' : 0.8 }
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted_test_y = simple_exponential_smoothing(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model = simple_exponential_smoothing(train_x= train_x , test_x=test_x , test_y = test_y,
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
-    print("Predicted Test Values:", predicted_test_y)
+    print("Predicted Test Values:", predicted)
     """
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
@@ -716,7 +782,10 @@ def simple_exponential_smoothing(**kwargs):
     for t in range(len(train_y), len(train_y) + len(test_y)):
         next_forecast = alpha * forecast[t - 1] + (1 - alpha) * forecast[t - 1]
         forecast.append(next_forecast)
-    return forecast
+    model = SimpleExponentialSmoothingModel(smoothening_parameter = alpha)
+    Y_fitted = train_y
+    Y_pred  = forecast 
+    return Y_fitted, Y_pred, model
 
 def double_exponential_smoothing(**kwargs):
     """
@@ -979,7 +1048,9 @@ def prophet_forecast(**kwargs):
         - 'interval_width': The width of the uncertainty intervals (default is 0.80).
         - 'uncertainty_samples': The number of samples for uncertainty (default is 1000).    
     Returns:
-    - Y_pred: The forecasted values for the test period, including the original training data.
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - rf_model: The trained Random Forest model.      
     # Example Usage:
     # Generating some synthetic data for training
     train_x = pd.date_range(start='2021-01-01', periods=100, freq='D')  # 100 days of data
@@ -998,14 +1069,14 @@ def prophet_forecast(**kwargs):
         'holiday': ['Valentine', 'Easter', 'Christmas']
     })
     # Using Prophet to forecast with holiday effects and automatic seasonality mode selection
-    forecasted_data = prophet_forecast(
+    fitted, predicted, model = prophet_forecast(
         train_x=train_x,
         train_y=train_y,
         test_len=test_len,
         holidays_train=holidays_train,
         holidays_future=holidays_future
     )
-    print("Forecasted Data: ", forecasted_data)
+    print("Forecasted Data: ", predicted)
     """
     # Extract values from kwargs    
     train_x, train_y, test_x, test_y = (
@@ -1058,5 +1129,13 @@ def prophet_forecast(**kwargs):
     forecast = model.predict(future)    
     # Extract the forecasted values
     Y_pred = forecast['yhat'][-len(test_y):].values
-    Y_combined = np.append(train_y ,Y_pred)
-    return Y_combined, model
+    Y_fitted = model.predict(df_train)
+    Y_fitted = Y_fitted['yhat'].values
+    
+    return Y_fitted, Y_pred, model
+
+
+
+
+
+
