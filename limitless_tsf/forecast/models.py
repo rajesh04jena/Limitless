@@ -433,7 +433,6 @@ def random_forest_regression_forecast(**kwargs):
     - Y_pred: A numpy array containing the predicted values for test data.
     - rf_model: The trained Random Forest model.
     Usage:
-    #Usage
     model_params = {
     "n_estimators": 200,
     "max_depth": 10,
@@ -992,8 +991,13 @@ def tbats_forecast(**kwargs):
         - 'n_jobs': The number of jobs to run in parallel (default is -1 to use all available CPUs).
     
     Returns:
-    - Y_pred: The forecasted values for the test period, including the original training data.
-    - model: The fitted model 
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The fitted TBATS model(T: Trigonometric seasonality , 
+        B: Box-Cox transformation
+        A: ARIMA errors
+        T: Trend
+        S: Seasonal components)
     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0,
                        538.0, 118.0, 212.0, 103, 200,300 ]
@@ -1008,10 +1012,11 @@ def tbats_forecast(**kwargs):
     test_y = np.array([121, 0, 124, 0])
     model_params = {'seasonal_periods' : [12,7]}
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted_test_y = tbats_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+    
+    fitted, predicted, model  = tbats_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
-    print("Predicted Test Values:", predicted_test_y)
+    print("Predicted Test Values:", predicted)
     """    
     # Extract values from kwargs    
     train_x, train_y, test_x, test_y = (
@@ -1024,12 +1029,14 @@ def tbats_forecast(**kwargs):
     # Initialize TBATS model with seasonal periods
     model = TBATS(seasonal_periods=seasonal_periods)    
     # Fit the model on training data
-    fitted_model = model.fit(train_y)    
+    model = model.fit(train_y)    
     # Forecast the next 'test_len' periods
-    forecast = fitted_model.forecast(steps= len(test_y))    
+    Y_pred = model.forecast(steps= len(test_y))    
     # Combine the original training data with the forecasted values
-    Y_pred = np.append(train_y, forecast)    
-    return Y_pred, fitted_model
+    # Get the fitted values (in-train predictions)
+    Y_fitted = model.y_hat
+
+    return Y_fitted, Y_pred, model
 
 def prophet_forecast(**kwargs):
     """
