@@ -96,9 +96,9 @@ def lasso_regression_forecast(**kwargs):
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
         - 'alpha': The regularization strength for the Lasso model (float).
     Returns:
-    - Y_fitted : A numpy array containing the fitted values for training data.
-    - Y_pred: A numpy array containing the predicted values for test data.
-    - lasso_model: The fitted Lasso model.
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - lasso_model: The fitted Lasso model.
     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -160,8 +160,9 @@ def ridge_regression_forecast(**kwargs):
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
         - 'alpha': The regularization strength for the Ridge model (float).    
     Returns:
-    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
-    - ridge_model: The fitted Ridge model.    
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - ridge_model: The fitted Ridge model.       
     Example Usage:  
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -222,10 +223,11 @@ def xgboost_regression_forecast(**kwargs):
         - 'test_y': The test time series data (a numpy array).
         - 'xgb_params': Dictionary containing hyperparameters for the XGBoost model.
     
-    Returns:
-    - Y_pred: A numpy array containing the predicted values for the test set and in-train predictions.
-    - xgb_model: The fitted XGBoost model.
-    #Example Usage:
+    Returns:        
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - xgb_model: The fitted XGBoost model.
+     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -321,10 +323,9 @@ def lightgbm_regression_forecast(**kwargs):
             - 'n_jobs': Number of threads for parallel computation.
     
     Returns:
-    - Y_fitted : A numpy array containing the fitted values for training data.
-    - Y_pred: A numpy array containing the predicted values for test data.
-    - lgb_model: The trained LightGBM model.
-    
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - lgb_model: The trained LightGBM model.        
     #Usage
     # Set the LightGBM hyperparameters
     model_params = {
@@ -426,12 +427,11 @@ def random_forest_regression_forecast(**kwargs):
             - 'random_state': Random seed for reproducibility.
             - 'verbose': Controls the verbosity of the tree-building process.
             - 'warm_start': Whether to reuse the solution of the previous call to fit and add more estimators (default is False).
-            - 'class_weight': Weights associated with classes, only applicable for classification.
-    
+            - 'class_weight': Weights associated with classes, only applicable for classification.    
     Returns:
-    - Y_fitted : A numpy array containing the fitted values for training data.
-    - Y_pred: A numpy array containing the predicted values for test data.
-    - rf_model: The trained Random Forest model.
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - rf_model: The trained Random Forest model.
     Usage:
     model_params = {
     "n_estimators": 200,
@@ -565,28 +565,25 @@ class SeasonalNaiveModel:
     """
     A lightweight class to represent the seasonal naive forecasting model.
     This class provides information about the model type and the seasonal length.
-    """
+    """    
     def __init__(self, season_length):
         """
-        Initialize the SeasonalNaiveModel with the seasonal length.
+        Initialize the Seasonal Naive model with its parameters.
         
         Parameters:
-        - season_length: The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
+         - 'season_length': The length of the seasonal period 
+         (e.g., 12 for monthly data with yearly seasonality).  
         """
-        self.model_type = "Seasonal Naive Forecast"
         self.season_length = season_length
-
-    def get_model_type(self):
+        self.model_name = "Seasonal Naive Forecast"
+        
+    def __repr__(self):
         """
-        Returns the type of the model.
+        String representation of the model.
         """
-        return self.model_type
-
-    def get_season_length(self):
-        """
-        Returns the seasonal length used in the model.
-        """
-        return self.season_length
+        return (f"{self.model_name}\n"
+                f"Parameters:\n"
+                f"- season period: {self.season_length}")
 
 def seasonal_naive_forecast(**kwargs):
     """
@@ -597,10 +594,10 @@ def seasonal_naive_forecast(**kwargs):
         - 'test_y': The test time series data (a numpy array).
         - 'season_length': The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
     Returns:
-    - Y_fitted : A numpy array containing the fitted values for training data.
-    - Y_pred: A numpy array containing the predicted values for test data.
-    - model: The details about naive model parameters.
-    
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - model: The details about seasonal naive model parameters.
+        
     Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -652,9 +649,9 @@ def auto_arima_forecast(**kwargs):
         - 'season_length': The length of the seasonal period (optional, defaults to None).
         - Other parameters for `auto_arima` (e.g., 'm' for seasonality, 'start_p', 'start_q', etc.).
     Returns:
-    - Y_fitted : A numpy array containing the fitted values for training data.
-    - Y_pred: A numpy array containing the predicted values for test data.
-    - model: The details about arima model parameters.
+        - Y_fitted : A numpy array containing the fitted values for training data.
+        - Y_pred: A numpy array containing the predicted values for test data.
+        - model: The details about arima model parameters.
     Example Usage: 
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -709,30 +706,25 @@ def auto_arima_forecast(**kwargs):
 
 class SimpleExponentialSmoothingModel:
     """
-    A lightweight class to represent the Simple Exponential Smoothing Model.
-    This class provides information about the model type and the smoothening_parameter.
+    A class to represent the Simple Exponential Smoothing (SES) model, including its parameters and identifiers.
     """
     def __init__(self, smoothening_parameter):
         """
-        Initialize the SimpleExponentialSmoothingModel with smoothening parameter.
+        Initialize the SES model with its parameters.
         
         Parameters:
-        - smoothening_parameter: alpha also known as the Smoothing parameter (0 < alpha < 1)
+        - smoothening_parameter: Smoothing parameter (0 < alpha < 1).
         """
-        self.model_type = "SimpleExponentialSmoothingModel"
         self.smoothening_parameter = smoothening_parameter
-
-    def get_model_type(self):
+        self.model_name = "Simple Exponential Smoothing (SES) Model"
+    
+    def __repr__(self):
         """
-        Returns the type of the model.
+        String representation of the model.
         """
-        return self.model_type
-
-    def get_smoothening_parameter(self):
-        """
-        Returns Smoothing parameter used in the model.
-        """
-        return self.smoothening_parameter
+        return (f"{self.model_name}\n"
+                f"Parameters:\n"
+                f"- Smoothing Parameter (Alpha): {self.smoothening_parameter}")
 
 def simple_exponential_smoothing(**kwargs):
         
@@ -786,6 +778,31 @@ def simple_exponential_smoothing(**kwargs):
     Y_pred  = forecast 
     return Y_fitted, Y_pred, model
 
+class DoubleExponentialSmoothingModel:
+    """
+    A class to represent the Double Exponential Smoothing (DES) model, including its parameters and identifiers.
+    """
+    def __init__(self, alpha, beta):
+        """
+        Initialize the DES model with its parameters.
+        
+        Parameters:
+        - alpha: Smoothing parameter for level.
+        - beta: Smoothing parameter for trend.
+        """
+        self.alpha = alpha
+        self.beta = beta
+        self.model_name = "Double Exponential Smoothing (DES) Model"
+    
+    def __repr__(self):
+        """
+        String representation of the model.
+        """
+        return (f"{self.model_name}\n"
+                f"Parameters:\n"
+                f"- Alpha (Level Smoothing Parameter): {self.alpha}\n"
+                f"- Beta (Trend Smoothing Parameter): {self.beta}")
+
 def double_exponential_smoothing(**kwargs):
     """
     Double Exponential Smoothing (DES)
@@ -795,7 +812,9 @@ def double_exponential_smoothing(**kwargs):
     - alpha: Smoothing parameter for level.
     - beta: Smoothing parameter for trend.
     Returns:
-    - forecast: Array of predicted values using DES.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The details about DES model parameters.
     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
@@ -808,10 +827,10 @@ def double_exponential_smoothing(**kwargs):
     test_y = np.array([121, 122, 124, 123])
     model_params = {'level_smoothening_parameter' : 0.8 , 'trend_smoothening_parameter' : 0.8 }
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted_test_y = double_exponential_smoothing(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model  = double_exponential_smoothing(train_x= train_x , test_x=test_x , test_y = test_y,
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
-    print("Predicted Test Values:", predicted_test_y)
+    print("Predicted Test Values:", predicted)
     """
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
@@ -821,22 +840,31 @@ def double_exponential_smoothing(**kwargs):
     )
     alpha = kwargs["model_params"]["level_smoothening_parameter"]
     beta = kwargs["model_params"]["trend_smoothening_parameter"]
+    
+    # Initialize level, trend, and fitted values
     level = [train_y[0]]  # Initial level
     trend = [train_y[1] - train_y[0]]  # Initial trend (first difference)
-    forecast = [level[0] + trend[0]]  # First forecast
+    fitted_values = [level[0] + trend[0]]  # First fitted value
 
     # Apply DES on training data
     for t in range(1, len(train_y)):
         level.append(alpha * train_y[t] + (1 - alpha) * (level[t - 1] + trend[t - 1]))
         trend.append(beta * (level[t] - level[t - 1]) + (1 - beta) * trend[t - 1])
-        forecast.append(level[t] + trend[t])  # Forecast is level + trend
+        fitted_values.append(level[t] + trend[t])  # Fitted value is level + trend
+    
     # Forecast for test set
-    for t in range(len(train_y), len(train_y) + len(test_y)):
+    forecast = []
+    for _ in range(len(test_y)):
         level.append(level[-1] + trend[-1])  # Update level
         trend.append(trend[-1])
-        # Forecast is level + trend
-        forecast.append(level[-1] + trend[-1])
-    return forecast
+        forecast.append(level[-1] + trend[-1])  # Forecast is level + trend
+    
+    # Create an instance of the DoubleExponentialSmoothingModel class
+    model = DoubleExponentialSmoothingModel(alpha=alpha, beta=beta)
+    Y_fitted = fitted_values
+    Y_pred =  forecast
+    
+    return Y_fitted, Y_pred, model
 
 def holt_winters_forecast(**kwargs):
     """
@@ -958,7 +986,7 @@ def croston_tsb_forecast(**kwargs):
     Returns:
     - Y_fitted : A numpy array containing the fitted values for training data.
     - Y_pred: A numpy array containing the predicted values for test data.
-    - model: The trained Holt Winters model.
+    - model: The trained Croston TSB model.
     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300 ,
                            300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300]
@@ -1094,7 +1122,7 @@ def prophet_forecast(**kwargs):
     Returns:
         - Y_fitted : A numpy array containing the fitted values for training data.
         - Y_pred: A numpy array containing the predicted values for test data.
-        - rf_model: The trained Random Forest model.      
+        - model: The trained Prophet model.      
     # Example Usage:
     # Generating some synthetic data for training
     train_x = pd.date_range(start='2021-01-01', periods=100, freq='D')  # 100 days of data
