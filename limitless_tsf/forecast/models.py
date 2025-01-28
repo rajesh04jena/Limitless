@@ -918,7 +918,33 @@ def holt_winters_forecast(**kwargs):
     Y_pred = model.forecast(len(test_y))
     # Get the fitted values (in-train predictions)
     Y_fitted = model.fittedvalues
+    
     return Y_fitted, Y_pred, model
+
+class CrostonTSBModel:
+    """
+    A class to represent the Croston TSB model, including its parameters and identifiers.
+    """
+    def __init__(self, alpha, beta):
+        """
+        Initialize the Croston TSB model with its parameters.
+        
+        Parameters:
+        - alpha: Smoothing parameter for average demand.
+        - beta: Smoothing parameter for demand period length.
+        """
+        self.alpha = alpha
+        self.beta = beta
+        self.model_name = "Croston TSB (Teunter, Syntetos, and Babai) Intermittent Demand Forecasting Model"
+    
+    def __repr__(self):
+        """
+        String representation of the model.
+        """
+        return (f"{self.model_name}\n"
+                f"Parameters:\n"
+                f"- Alpha (Demand Smoothing Parameter): {self.alpha}\n"
+                f"- Beta (Period Length Smoothing Parameter): {self.beta}")
 
 def croston_tsb_forecast(**kwargs):
     """
@@ -930,7 +956,9 @@ def croston_tsb_forecast(**kwargs):
     - alpha: Smoothing parameter for average demand.
     - beta: Smoothing parameter for demand period length.    
     Returns:
-    - forecast: Forecasted values for the test periods.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The trained Holt Winters model.
     #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300 ,
                            300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300]
@@ -947,10 +975,10 @@ def croston_tsb_forecast(**kwargs):
     model_params = {'demand_smoothening_parameter' : 0.3 ,
                     'period_length_smoothening_parameter' : 0.3}
     # Using kwargs to pass train_x, test_x, and season_length
-    predicted_test_y = croston_tsb_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model = croston_tsb_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
-    print("Predicted Test Values:", predicted_test_y)
+    print("Predicted Test Values:", predicted)
     """
     train_x, train_y, test_x, test_y = (
         kwargs["train_x"],
@@ -959,10 +987,11 @@ def croston_tsb_forecast(**kwargs):
         kwargs["test_y"],
     )
     alpha = kwargs["model_params"]["demand_smoothening_parameter"]
-    beta = kwargs["model_params"]["period_length_smoothening_parameter"]
+    beta = kwargs["model_params"]["period_length_smoothening_parameter"]    
     # Initialize level (intermittent demand) and period length
     level = [train_y[0]]
     period_length = [1]  # The first demand's period length (assuming the first non-zero value occurs at t=1)    
+    fitted_values = [train_y[0]]  # Initialize fitted values with the first training value    
     # Croston TSB Method Algorithm
     for t in range(1, len(train_y)):
         if train_y[t] != 0:
@@ -971,14 +1000,21 @@ def croston_tsb_forecast(**kwargs):
         else:
             level.append(level[-1])
             period_length.append(period_length[-1])
+        
+        # Calculate fitted values for the training period
+        fitted_values.append(level[-1] / period_length[-1] if period_length[-1] != 0 else 0)    
     # Applying bias correction to improve prediction accuracy
     level_corrected = [l / p if p != 0 else 0 for l, p in zip(level, period_length)]    
     # Forecasting for the test period
     forecast = []
     for _ in range(len(test_y)):
-        forecast.append(level_corrected[-1])
-    forecast_combined = np.append(train_y, forecast)    
-    return forecast_combined
+        forecast.append(level_corrected[-1])    
+    # Create an instance of the CrostonTSBModel class
+    model = CrostonTSBModel(alpha=alpha, beta=beta)    
+    Y_fitted = fitted_values
+    Y_pred = forecast
+    
+    return Y_fitted, Y_pred, model
 
 def tbats_forecast(**kwargs):
     """
