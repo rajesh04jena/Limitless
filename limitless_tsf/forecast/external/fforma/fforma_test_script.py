@@ -26,10 +26,18 @@ X_train_df, y_train_df, X_test_df, y_test_df = prepare_m4_data( dataset_name= 'D
 monthly_train = pd.read_csv('data/m4/Train/Monthly-train.csv' , sep = ',')
 
 
-temp.to_csv('monthly_train.csv' , index = False)
+info_file = pd.read_csv('data/m4/M4-info.csv' , sep = ',')
 
 
-temp = monthly_train.head()
+temp = info_file[info_file['M4id'] == monthly_train['V1'].iloc[0] ]
+
+
+
+temp.to_csv('monthly_train_sample.csv' , index = False)
+
+
+
+
 
 
 #Generate predictions on univariate algorithms
