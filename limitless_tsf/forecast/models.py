@@ -25,7 +25,7 @@ from sklearn.linear_model import Ridge
 import xgboost as xgb
 from sklearn.ensemble import RandomForestRegressor
 import lightgbm as lgb
-#import catboost as cb
+import catboost as cb
 
 def linear_regression_forecast(**kwargs):
     """
@@ -453,8 +453,7 @@ def random_forest_regression_forecast(**kwargs):
         test_x=test_x,
         test_y=test_y,
         model_params=model_params
-    )
-    
+    )    
     # Print the combined predictions
     print("Predictions: ", predicted)            
     """    
@@ -522,8 +521,41 @@ def catboost_regression_forecast(**kwargs):
             - 'thread_count': Number of threads to use for parallel computation.
 
     Returns:
-    - Y_pred: A numpy array containing the predicted values for both the training and test sets.
+    - Y_fitted : A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
     - catboost_model: The trained CatBoost model.
+    Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+    test_y = np.array([121, 122, 124, 123]) 
+    model_params = {
+    "iterations": 1000,
+    "learning_rate":  0.1 ,
+    "depth": 6,
+    "l2_leaf_reg": 3.0,
+    "loss_function": "RMSE",
+    "metric_period": 100,
+    "random_state": 42,
+    "cat_features": None,
+    "verbose": False,
+    "thread_count": -1
+    }
+    # Call the Random Forest regression function
+    fitted, predicted, model = catboost_regression_forecast(
+        train_x=train_x,
+        train_y=train_y,
+        test_x=test_x,
+        test_y=test_y,
+        model_params=model_params
+    )
+    # Print the predictions
+    print("Predictions: ", predicted)            
     """    
     # Extract input data
     train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
@@ -555,11 +587,10 @@ def catboost_regression_forecast(**kwargs):
     # Train the CatBoost model
     catboost_model.fit(train_x, train_y)
     # Predict on both train and test sets
-    Y_train_pred = catboost_model.predict(train_x)
-    Y_test_pred = catboost_model.predict(test_x)    
-    # Combine train and test predictions into a single array
-    Y_pred = np.append(Y_train_pred, Y_test_pred)
-    return Y_pred, catboost_model
+    Y_fitted = catboost_model.predict(train_x)
+    Y_pred = catboost_model.predict(test_x)    
+   
+    return Y_fitted, Y_pred, catboost_model
 
 class SeasonalNaiveModel:
     """
