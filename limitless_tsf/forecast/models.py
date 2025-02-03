@@ -35,13 +35,12 @@ def linear_regression_forecast(**kwargs):
         - 'train_x': The training exogenious/features data (a numpy array).
         - 'test_x': The test exogenious/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
-        - 'test_y': The test time series data (a numpy array).
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators
     Returns:
     - Y_fitted : A numpy array containing the fitted values for training data.
     - Y_pred: A numpy array containing the predicted values for test data.
     - lr_model : The fitted linear regression model.
-    #Example Usage:   
+    #Example Usage: 
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -50,19 +49,17 @@ def linear_regression_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
     model_params = {'scaling_method' : 'MinMaxScaler' }
     # Using kwargs to pass train_x, test_x, and season_length
     fitted, predicted, lr_model = linear_regression_forecast(train_x= train_x , test_x=test_x ,
-                                          test_y = test_y, train_y =  train_y, model_params= model_params )
+                                           train_y =  train_y, model_params= model_params )
     # Output the predicted values
-    print("Predicted Test Values:", predicted)
-   """
-    train_x, train_y, test_x, test_y = (
+    print("Predicted Test Values:", predicted)    
+    """
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]        
     )
     # feature scaling
     if kwargs["model_params"]["scaling_method"] == "StandardScaler":
@@ -92,7 +89,6 @@ def lasso_regression_forecast(**kwargs):
         - 'train_x': The training exogenous/features data (a numpy array).
         - 'test_x': The test exogenous/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
-        - 'test_y': The test time series data (a numpy array).
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
         - 'alpha': The regularization strength for the Lasso model (float).
     Returns:
@@ -108,20 +104,18 @@ def lasso_regression_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
     model_params = {'scaling_method' : 'MinMaxScaler' ,"alpha": 0.1 }
     # Using kwargs to pass train_x, test_x, and season_length
     fitted, predicted, lasso_model = lasso_regression_forecast(train_x= train_x , test_x=test_x ,
-                                          test_y = test_y, train_y =  train_y, 
+                                          train_y =  train_y, 
                                           model_params= model_params )
     # Output the predicted values
     print("Predicted Test Data Values:", predicted) 
     """
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x  = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]
     )    
     # Scaling the features
     scaling_method = kwargs["model_params"].get("scaling_method", "MinMaxScaler")
@@ -156,14 +150,13 @@ def ridge_regression_forecast(**kwargs):
         - 'train_x': The training exogenous/features data (a numpy array).
         - 'test_x': The test exogenous/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
-        - 'test_y': The test time series data (a numpy array).
         - 'scaling_method': Standardization of datasets is a common requirement for many machine learning estimators.
         - 'alpha': The regularization strength for the Ridge model (float).    
     Returns:
         - Y_fitted : A numpy array containing the fitted values for training data.
         - Y_pred: A numpy array containing the predicted values for test data.
         - ridge_model: The fitted Ridge model.       
-    Example Usage:  
+    Example Usage: 
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -172,20 +165,18 @@ def ridge_regression_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
     model_params = {'scaling_method' : 'MinMaxScaler' ,"alpha": 0.1 }
     # Using kwargs to pass train_x, test_x, and season_length
     fitted, predicted, ridge_model = ridge_regression_forecast(train_x= train_x , test_x=test_x ,
-                                      test_y = test_y, train_y =  train_y, 
+                                       train_y =  train_y, 
                                       model_params= model_params )
     # Output the predicted values
     print("Predicted Test Data Values:", predicted)    
     """
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]
     )    
     # Scaling the features
     scaling_method = kwargs["model_params"].get("scaling_method", "MinMaxScaler")
@@ -220,14 +211,13 @@ def xgboost_regression_forecast(**kwargs):
         - 'train_x': The training exogenous/features data (a numpy array).
         - 'test_x': The test exogenous/features data (a numpy array).
         - 'train_y': The training time series data (a numpy array).
-        - 'test_y': The test time series data (a numpy array).
         - 'xgb_params': Dictionary containing hyperparameters for the XGBoost model.
     
     Returns:        
         - Y_fitted : A numpy array containing the fitted values for training data.
         - Y_pred: A numpy array containing the predicted values for test data.
         - xgb_model: The fitted XGBoost model.
-     #Example Usage:
+    #Example Usage:
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -236,12 +226,10 @@ def xgboost_regression_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123]) 
     fitted, predicted, model = xgboost_regression_forecast(
         train_x=train_x,
         train_y=train_y,
-        test_x=test_x,
-        test_y=test_y,
+        test_x=test_x,   
         xgb_params={        
                 "objective": "reg:squarederror",  # Regression task
                 "booster": "gbtree",  # Tree-based boosting
@@ -258,11 +246,10 @@ def xgboost_regression_forecast(**kwargs):
     print("Predicted Test Values:", predicted)        
     """
     # Extract arguments
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]
     )    
     # Extract XGBoost hyperparameters
     xgb_params = kwargs.get("xgb_params", {
@@ -289,7 +276,7 @@ def xgboost_regression_forecast(**kwargs):
     xgb_model = xgb.XGBRegressor(**xgb_params)    
     # Fit the model
     xgb_model.fit(train_x, train_y, 
-                  eval_set=[(test_x, test_y)],                   
+                  eval_set=[(train_x, train_y)],                   
                   verbose=False)
     # Predicting values for both train and test data
     Y_fitted =  xgb_model.predict(train_x)
@@ -299,13 +286,12 @@ def xgboost_regression_forecast(**kwargs):
 
 def lightgbm_regression_forecast(**kwargs):
     """
-    Perform LightGBM Regression, predicting the value from the corresponding period in the training set.    
+    Perform LightGBM Regression, predicting the value from the corresponding period in the training set.
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_x': The training features (a numpy array or pandas DataFrame).
         - 'test_x': The test features (a numpy array or pandas DataFrame).
         - 'train_y': The training target values (a numpy array).
-        - 'test_y': The test target values (a numpy array).
         - 'model_params': Dictionary containing the hyperparameters for the LightGBM model.
             - 'boosting_type': Type of boosting ('gbdt', 'dart', 'goss').
             - 'num_leaves': Maximum number of leaves in one tree.
@@ -321,12 +307,21 @@ def lightgbm_regression_forecast(**kwargs):
             - 'reg_lambda': L2 regularization term.
             - 'random_state': Random seed for reproducibility.
             - 'n_jobs': Number of threads for parallel computation.
-    
     Returns:
         - Y_fitted : A numpy array containing the fitted values for training data.
         - Y_pred: A numpy array containing the predicted values for test data.
-        - lgb_model: The trained LightGBM model.        
+        - lgb_model: The trained LightGBM model.
     #Usage
+    # Set the LightGBM hyperparameters
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+
     # Set the LightGBM hyperparameters
     model_params = {
         "boosting_type": "gbdt",
@@ -349,25 +344,30 @@ def lightgbm_regression_forecast(**kwargs):
         train_x=train_x,
         train_y=train_y,
         test_x=test_x,
-        test_y=test_y,
         model_params=model_params
     )    
     # Print the combined predictions
     print("Predictions: ", predicted)
-    """    
+    """
     # Extract input data
-    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    train_x, train_y, test_x = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"]
     # Extract model parameters
     model_params = kwargs.get("model_params", {})
-    boosting_type = model_params.get("boosting_type", "gbdt")  # Default: gbdt (Gradient Boosting Decision Trees)
+    boosting_type = model_params.get(
+        "boosting_type", "gbdt"
+    )  # Default: gbdt (Gradient Boosting Decision Trees)
     num_leaves = model_params.get("num_leaves", 31)  # Default: 31
     max_depth = model_params.get("max_depth", -1)  # Default: No limit
     learning_rate = model_params.get("learning_rate", 0.1)  # Default: 0.1
     n_estimators = model_params.get("n_estimators", 100)  # Default: 100 trees
-    objective = model_params.get("objective", "regression")  # Default: regression (for continuous target)
+    objective = model_params.get(
+        "objective", "regression"
+    )  # Default: regression (for continuous target)
     metric = model_params.get("metric", "l2")  # Default: l2 (Mean Squared Error)
     subsample = model_params.get("subsample", 1.0)  # Default: 1 (use all data)
-    colsample_bytree = model_params.get("colsample_bytree", 1.0)  # Default: 1 (use all features)
+    colsample_bytree = model_params.get(
+        "colsample_bytree", 1.0
+    )  # Default: 1 (use all features)
     min_child_samples = model_params.get("min_child_samples", 20)  # Default: 20
     reg_alpha = model_params.get("reg_alpha", 0.0)  # L1 regularization
     reg_lambda = model_params.get("reg_lambda", 0.0)  # L2 regularization
@@ -375,7 +375,6 @@ def lightgbm_regression_forecast(**kwargs):
     n_jobs = model_params.get("n_jobs", -1)  # Default: -1 (use all cores)
     # Prepare LightGBM Dataset
     train_data = lgb.Dataset(train_x, label=train_y)
-    test_data = lgb.Dataset(test_x, label=test_y, reference=train_data)
     # Set up parameters for the model
     params = {
         "boosting_type": boosting_type,
@@ -391,29 +390,25 @@ def lightgbm_regression_forecast(**kwargs):
         "reg_alpha": reg_alpha,
         "reg_lambda": reg_lambda,
         "random_state": random_state,
-        "n_jobs": n_jobs
+        "n_jobs": n_jobs,
     }
     # Train the LightGBM model
-    lgb_model = lgb.train(
-        params,
-        train_data,
-        valid_sets=[test_data]               
-    )
+    lgb_model = lgb.train(params, train_data, valid_sets=[train_data])
     # Predict on both train and test sets
     # Combine train and test predictions into a single array
     Y_fitted = lgb_model.predict(train_x, num_iteration=lgb_model.best_iteration)
-    Y_pred = lgb_model.predict(test_x, num_iteration=lgb_model.best_iteration)    
+    Y_pred = lgb_model.predict(test_x, num_iteration=lgb_model.best_iteration)
+
     return Y_fitted, Y_pred, lgb_model
 
 def random_forest_regression_forecast(**kwargs):
     """
-    Perform Random Forest Regression, predicting the value from the corresponding period in the training set.    
+    Perform Random Forest Regression, predicting the value from the corresponding period in the training set.
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_x': The training features (a numpy array).
         - 'test_x': The test features (a numpy array).
         - 'train_y': The training target values (a numpy array).
-        - 'test_y': The test target values (a numpy array).
         - 'model_params': Dictionary containing the hyperparameters for the Random Forest model.
             - 'n_estimators': Number of trees in the forest (default is 100).
             - 'max_depth': Maximum depth of the tree (default is None).
@@ -427,12 +422,21 @@ def random_forest_regression_forecast(**kwargs):
             - 'random_state': Random seed for reproducibility.
             - 'verbose': Controls the verbosity of the tree-building process.
             - 'warm_start': Whether to reuse the solution of the previous call to fit and add more estimators (default is False).
-            - 'class_weight': Weights associated with classes, only applicable for classification.    
+            - 'class_weight': Weights associated with classes, only applicable for classification.
     Returns:
         - Y_fitted : A numpy array containing the fitted values for training data.
         - Y_pred: A numpy array containing the predicted values for test data.
         - rf_model: The trained Random Forest model.
     Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
+    test_x = np.array([ test_feature_1 , test_feature_2 ])
+    test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
+
     model_params = {
     "n_estimators": 200,
     "max_depth": 10,
@@ -447,33 +451,39 @@ def random_forest_regression_forecast(**kwargs):
     "warm_start": False
     }
     # Call the Random Forest regression function
+
     fitted, predicted, model = random_forest_regression_forecast(
         train_x=train_x,
         train_y=train_y,
         test_x=test_x,
-        test_y=test_y,
         model_params=model_params
-    )    
+    )
     # Print the combined predictions
-    print("Predictions: ", predicted)            
-    """    
+    print("Predictions: ", predicted)
+    """
     # Extract input data
-    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    train_x, train_y, test_x = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"]
     # Extract model parameters, using default values if not provided
     model_params = kwargs.get("model_params", {})
     n_estimators = model_params.get("n_estimators", 100)  # Default 100 trees
     max_depth = model_params.get("max_depth", None)  # No limit on tree depth
     min_samples_split = model_params.get("min_samples_split", 2)  # Default value 2
     min_samples_leaf = model_params.get("min_samples_leaf", 1)  # Default value 1
-    max_features = model_params.get("max_features", 2)  # Default is 'auto' (sqrt of number of features)
-    max_samples = model_params.get("max_samples", None)  # Default is None (use all samples)
+    max_features = model_params.get(
+        "max_features", 2
+    )  # Default is 'auto' (sqrt of number of features)
+    max_samples = model_params.get(
+        "max_samples", None
+    )  # Default is None (use all samples)
     bootstrap = model_params.get("bootstrap", True)  # Default is True
     oob_score = model_params.get("oob_score", False)  # Default is False
     n_jobs = model_params.get("n_jobs", 1)  # Default is 1 (use a single core)
     random_state = model_params.get("random_state", 42)  # Default random seed
     verbose = model_params.get("verbose", 0)  # Default verbosity is 0 (silent)
-    warm_start = model_params.get("warm_start", False)  # Default is False (no warm start)
-    
+    warm_start = model_params.get(
+        "warm_start", False
+    )  # Default is False (no warm start)
+
     # Initialize Random Forest Regressor with all the parameters
     rf_model = RandomForestRegressor(
         n_estimators=n_estimators,
@@ -487,16 +497,16 @@ def random_forest_regression_forecast(**kwargs):
         n_jobs=n_jobs,
         random_state=random_state,
         verbose=verbose,
-        warm_start=warm_start
-    )    
+        warm_start=warm_start,
+    )
     # Train the model on the training data
-    rf_model.fit(train_x, train_y)    
+    rf_model.fit(train_x, train_y)
     # Predict on both train and test sets
-   
+
     # Combine train and test predictions into a single array
     Y_fitted = rf_model.predict(train_x)
-    Y_pred = rf_model.predict(test_x)  
-       
+    Y_pred = rf_model.predict(test_x)
+
     return Y_fitted, Y_pred, rf_model
 
 def catboost_regression_forecast(**kwargs):
@@ -507,7 +517,6 @@ def catboost_regression_forecast(**kwargs):
         - 'train_x': The training features (a numpy array or pandas DataFrame).
         - 'test_x': The test features (a numpy array or pandas DataFrame).
         - 'train_y': The training target values (a numpy array).
-        - 'test_y': The test target values (a numpy array).
         - 'model_params': Dictionary containing the hyperparameters for the CatBoost model.
             - 'iterations': Number of boosting iterations (trees).
             - 'learning_rate': Step size for updating model weights.
@@ -524,7 +533,8 @@ def catboost_regression_forecast(**kwargs):
     - Y_fitted : A numpy array containing the fitted values for training data.
     - Y_pred: A numpy array containing the predicted values for test data.
     - catboost_model: The trained CatBoost model.
-    Usage:
+    Usage : 
+        
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -533,7 +543,6 @@ def catboost_regression_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123]) 
     model_params = {
     "iterations": 1000,
     "learning_rate":  0.1 ,
@@ -551,14 +560,14 @@ def catboost_regression_forecast(**kwargs):
         train_x=train_x,
         train_y=train_y,
         test_x=test_x,
-        test_y=test_y,
         model_params=model_params
     )
     # Print the predictions
     print("Predictions: ", predicted)            
+    
     """    
     # Extract input data
-    train_x, train_y, test_x, test_y = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"], kwargs["test_y"]    
+    train_x, train_y, test_x = kwargs["train_x"], kwargs["train_y"], kwargs["test_x"]   
     # Extract model parameters
     model_params = kwargs.get("model_params", {})
     iterations = model_params.get("iterations", 1000)  # Number of boosting iterations (default 1000)
@@ -622,7 +631,7 @@ def seasonal_naive_forecast(**kwargs):
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_y': The training time series data (a numpy array).
-        - 'test_y': The test time series data (a numpy array).
+        - 'test_x': The auto-generated test time series feature data (a numpy array).
         - 'season_length': The length of the seasonal period (e.g., 12 for monthly data with yearly seasonality).
     Returns:
         - Y_fitted : A numpy array containing the fitted values for training data.
@@ -630,32 +639,34 @@ def seasonal_naive_forecast(**kwargs):
         - model: The details about seasonal naive model parameters.
         
     Example Usage:
-    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
-    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300 ,
+                           300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300]
+    train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0,71002, 16900,120301,
+                           41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0,71002, 16900,120301]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
     test_feature_1 = [929.0, 148.0, 718.0, 282.0]
     test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
-    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
+    train_y = np.array([100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0,
+                        100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0])
+
     model_params = {'season_length' : 12 }
     # Using kwargs to pass train_x, test_x, and season_length
-    fitted, predicted, model = seasonal_naive_forecast(train_x= train_x , test_x=test_x , test_y = test_y, 
+    fitted, predicted, model = seasonal_naive_forecast(train_x= train_x , test_x=test_x , 
                                        train_y =  train_y, model_params= model_params )    
     # Output the predicted values
     print("Predicted Test Values:", predicted)
     """    
     # Extract values from kwargs
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]        
     )
     season_length = kwargs["model_params"]["season_length"]
     # Number of observations in the test set
-    n_test = len(test_y)
+    n_test = len(train_y)
     # Create an array to store the predictions
     predicted_test_y = np.zeros(n_test)
     # Loop through each test point and assign the value from the corresponding period in train_x
@@ -676,7 +687,7 @@ def auto_arima_forecast(**kwargs):
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_y': The training data (a numpy array or list).
-        - 'test_y': The test data (a numpy array or list).
+        - 'test_x': The test data (a numpy array or list).
         - 'season_length': The length of the seasonal period (optional, defaults to None).
         - Other parameters for `auto_arima` (e.g., 'm' for seasonality, 'start_p', 'start_q', etc.).
     Returns:
@@ -692,20 +703,18 @@ def auto_arima_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
     model_params = {'season_length' : 12 }
     # Using kwargs to pass train_x, test_x, and season_length
-    fitted, predicted, model = auto_arima_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model = auto_arima_forecast(train_x= train_x , test_x=test_x ,
                                            train_y =  train_y, model_params = model_params)
     # Output the predicted values
-    print("Predicted Test Values:", predicted)
+    print("Predicted Test Values:", predicted)    
    """
     # Extract values from kwargs
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]     
     )
     m = kwargs["model_params"]["season_length"]
     # We will let auto_arima automatically tune p, d, q, and seasonal components (P, D, Q, m)
@@ -728,10 +737,10 @@ def auto_arima_forecast(**kwargs):
             stepwise=True,
             suppress_warnings=True,
         )
-    # Make forecasts for the test set and append the in-train values
-    
-    Y_fitted = train_y
-    Y_pred =  model.predict(n_periods=len(test_y))
+    # Generate fitted values for the training data
+    Y_fitted = model.predict_in_sample() 
+    # Make forecasts for the test set
+    Y_pred =  model.predict(n_periods=len(test_x))
     
     return Y_fitted, Y_pred, model
 
@@ -763,14 +772,14 @@ def simple_exponential_smoothing(**kwargs):
     Simple Exponential Smoothing (SES)
     Parameters (via kwargs):
     - 'train_y': The training data (a numpy array or list).
-    - 'test_y': The test data (a numpy array or list).
+    - 'test_x': The auto-generated test time series feature data
     - alpha: Smoothing parameter (0 < alpha < 1).
     Returns:
     - Y_fitted : A numpy array containing the fitted values for training data.
     - Y_pred: A numpy array containing the predicted values for test data.
     - model: The details about SES model parameters.
     
-    #Example Usage:    
+    #Example Usage:           
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0]
     train_x = pd.DataFrame({ 'feature_1' : train_feature_1 , 'feature_2' : train_feature_2 }).values
@@ -778,35 +787,40 @@ def simple_exponential_smoothing(**kwargs):
     test_feature_2 = [ 98501.0  , 38506.0 , 84499.0 , 84004.0]
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
-    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
+    train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])    
     model_params = {'smoothening_parameter' : 0.8 }
     # Using kwargs to pass train_x, test_x, and season_length
-    fitted, predicted, model = simple_exponential_smoothing(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model = simple_exponential_smoothing(train_x= train_x , test_x=test_x , 
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
     print("Predicted Test Values:", predicted)
+
     """
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]
     )
     alpha = kwargs["model_params"]["smoothening_parameter"]
+    
     # Initialize the forecasted values list with the first value
-    forecast = [train_y[0]]  # The first forecast is just the first data point
-    # Apply SES formula to generate forecasts for the training data
+    fitted = [train_y[0]]  # The first fitted value is just the first data point
+    
+    # Apply SES formula to generate fitted values for the training data
     for t in range(1, len(train_y)):
-        next_forecast = alpha * train_y[t - 1] + (1 - alpha) * forecast[t - 1]
-        forecast.append(next_forecast)
+        next_fitted = alpha * train_y[t - 1] + (1 - alpha) * fitted[t - 1]
+        fitted.append(next_fitted)
+    
     # Now, recursively forecast for the test period (i.e., beyond the training data)
-    for t in range(len(train_y), len(train_y) + len(test_y)):
+    forecast = fitted.copy()  # Start the forecast with the fitted values
+    for t in range(len(train_y), len(train_y) + len(test_x)):
         next_forecast = alpha * forecast[t - 1] + (1 - alpha) * forecast[t - 1]
         forecast.append(next_forecast)
-    model = SimpleExponentialSmoothingModel(smoothening_parameter = alpha)
-    Y_fitted = train_y
-    Y_pred  = forecast 
+
+    model = SimpleExponentialSmoothingModel(smoothening_parameter=alpha)
+    
+    Y_pred = np.array(forecast[len(train_y):])  # Extract the forecast for the test period
+    Y_fitted = np.array(fitted)
     return Y_fitted, Y_pred, model
 
 class DoubleExponentialSmoothingModel:
@@ -839,7 +853,7 @@ def double_exponential_smoothing(**kwargs):
     Double Exponential Smoothing (DES)
     Parameters (via kwargs):
     - 'train_y': The training data (a numpy array or list).
-    - 'test_y': The test data (a numpy array or list).
+    - 'test_x': The auto-generated test time series feature data
     - alpha: Smoothing parameter for level.
     - beta: Smoothing parameter for trend.
     Returns:
@@ -855,19 +869,18 @@ def double_exponential_smoothing(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112])
-    test_y = np.array([121, 122, 124, 123])
     model_params = {'level_smoothening_parameter' : 0.8 , 'trend_smoothening_parameter' : 0.8 }
     # Using kwargs to pass train_x, test_x, and season_length
-    fitted, predicted, model  = double_exponential_smoothing(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model  = double_exponential_smoothing(train_x= train_x , test_x=test_x ,
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
     print("Predicted Test Values:", predicted)
+        
     """
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]       
     )
     alpha = kwargs["model_params"]["level_smoothening_parameter"]
     beta = kwargs["model_params"]["trend_smoothening_parameter"]
@@ -885,15 +898,15 @@ def double_exponential_smoothing(**kwargs):
     
     # Forecast for test set
     forecast = []
-    for _ in range(len(test_y)):
+    for _ in range(len(test_x)):
         level.append(level[-1] + trend[-1])  # Update level
         trend.append(trend[-1])
         forecast.append(level[-1] + trend[-1])  # Forecast is level + trend
     
     # Create an instance of the DoubleExponentialSmoothingModel class
     model = DoubleExponentialSmoothingModel(alpha=alpha, beta=beta)
-    Y_fitted = fitted_values
-    Y_pred =  forecast
+    Y_fitted = np.array(fitted_values)
+    Y_pred =  np.array(forecast)
     
     return Y_fitted, Y_pred, model
 
@@ -903,7 +916,7 @@ def holt_winters_forecast(**kwargs):
     between additive and multiplicative based on training data.
     Parameters:
     - 'train_y': The training data (a numpy array or list).
-    - 'test_y': The test data (a numpy array or list).
+    - 'test_x': The auto-generated test time series feature data
     - alpha: Level smoothing parameter.
     - beta: Trend smoothing parameter.
     - gamma: Seasonal smoothing parameter.
@@ -915,6 +928,7 @@ def holt_winters_forecast(**kwargs):
     - model: The trained Holt Winters model.
     
     #Example Usage:
+        
     train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300 ,
                  300.0, 722.0, 184.0, 913.0, 635.0, 427.0, 538.0, 118.0, 212.0, 103, 200,300]
     train_feature_2 = [41800.0 , 0.0 , 12301.0, 88104.0  , 21507.0 ,  98501.0  , 38506.0 , 84499.0 , 84004.0,71002, 16900,120301,
@@ -925,20 +939,19 @@ def holt_winters_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 102, 104, 103, 105, 107, 108, 110, 112, 200 , 301, 411,
-                    100, 102, 104, 103, 105, 107, 108, 110, 112, 200 , 301, 411])
-    test_y = np.array([121, 122, 124, 123])
+                    100, 102, 104, 103, 105, 107, 108, 110, 112, 200 , 301, 411])    
     model_params = {'level_smoothening_parameter' : 0.8 , 'trend_smoothening_parameter' : 0.8 , 'seasonal_smoothening_parameter' : 0.2 ,'seasonal_length' : 12 }
     # Using kwargs to pass train_x, test_x, and season_length
-    fitted, predicted, model  = holt_winters_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model  = holt_winters_forecast(train_x= train_x , test_x=test_x , 
                                    train_y =  train_y, model_params = model_params)
     # Output the predicted values
     print("Predicted Test Values:", predicted)
+    
     """
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]        
     )
     alpha = kwargs["model_params"]["level_smoothening_parameter"]
     beta = kwargs["model_params"]["trend_smoothening_parameter"]
@@ -974,7 +987,7 @@ def holt_winters_forecast(**kwargs):
             seasonal_periods=m,
         ).fit(smoothing_level=alpha, smoothing_slope=beta, smoothing_seasonal=gamma)
     # Forecast the test periods
-    Y_pred = model.forecast(len(test_y))
+    Y_pred = model.forecast(len(test_x))
     # Get the fitted values (in-train predictions)
     Y_fitted = model.fittedvalues
     
@@ -1010,7 +1023,7 @@ def croston_tsb_forecast(**kwargs):
     Croston's TSB (Teunter, Syntetos, and Babai) method for intermittent demand forecasting.    
     Parameters:
     - 'train_y': The training data (a numpy array or list).
-    - 'test_y': The test data (a numpy array or list).        
+    - 'test_x': The auto-generated test time series feature data       
     - test_len: The number of periods to forecast.
     - alpha: Smoothing parameter for average demand.
     - beta: Smoothing parameter for demand period length.    
@@ -1029,21 +1042,20 @@ def croston_tsb_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0,
-                        100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0])
-    test_y = np.array([121, 0, 124, 0])
+                        100, 0, 104, 0, 105, 0, 108, 0, 112, 0 , 301, 0])   
     model_params = {'demand_smoothening_parameter' : 0.3 ,
                     'period_length_smoothening_parameter' : 0.3}
     # Using kwargs to pass train_x, test_x, and season_length
-    fitted, predicted, model = croston_tsb_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+    fitted, predicted, model = croston_tsb_forecast(train_x= train_x , test_x=test_x , 
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
     print("Predicted Test Values:", predicted)
+    
     """
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]       
     )
     alpha = kwargs["model_params"]["demand_smoothening_parameter"]
     beta = kwargs["model_params"]["period_length_smoothening_parameter"]    
@@ -1066,7 +1078,7 @@ def croston_tsb_forecast(**kwargs):
     level_corrected = [l / p if p != 0 else 0 for l, p in zip(level, period_length)]    
     # Forecasting for the test period
     forecast = []
-    for _ in range(len(test_y)):
+    for _ in range(len(test_x)):
         forecast.append(level_corrected[-1])    
     # Create an instance of the CrostonTSBModel class
     model = CrostonTSBModel(alpha=alpha, beta=beta)    
@@ -1082,7 +1094,7 @@ def tbats_forecast(**kwargs):
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_y': The training time series data (a numpy array).
-        - 'test_len': The number of periods to forecast.
+        - 'test_x': The auto-generated test time series feature data
         - 'seasonal_periods': A list of seasonal periods (e.g., [12, 7] for yearly and weekly seasonality).
         - 'n_jobs': The number of jobs to run in parallel (default is -1 to use all available CPUs).
     
@@ -1105,21 +1117,20 @@ def tbats_forecast(**kwargs):
     test_x = np.array([ test_feature_1 , test_feature_2 ])
     test_x = pd.DataFrame({ 'feature_1' : test_feature_1 , 'feature_2' : test_feature_2 }).values
     train_y = np.array([100, 120, 130, 140, 110, 115, 150, 160, 170, 165, 180, 190])
-    test_y = np.array([121, 0, 124, 0])
     model_params = {'seasonal_periods' : [12,7]}
     # Using kwargs to pass train_x, test_x, and season_length
-    
-    fitted, predicted, model  = tbats_forecast(train_x= train_x , test_x=test_x , test_y = test_y,
+
+    fitted, predicted, model  = tbats_forecast(train_x= train_x , test_x=test_x , 
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
     print("Predicted Test Values:", predicted)
+    
     """    
     # Extract values from kwargs    
-    train_x, train_y, test_x, test_y = (
+    train_x, train_y, test_x = (
         kwargs["train_x"],
         kwargs["train_y"],
-        kwargs["test_x"],
-        kwargs["test_y"],
+        kwargs["test_x"]        
     )
     seasonal_periods = kwargs["model_params"]["seasonal_periods"]    
     # Initialize TBATS model with seasonal periods
@@ -1127,7 +1138,7 @@ def tbats_forecast(**kwargs):
     # Fit the model on training data
     model = model.fit(train_y)    
     # Forecast the next 'test_len' periods
-    Y_pred = model.forecast(steps= len(test_y))    
+    Y_pred = model.forecast(steps= len(test_x))    
     # Combine the original training data with the forecasted values
     # Get the fitted values (in-train predictions)
     Y_fitted = model.y_hat
@@ -1142,7 +1153,6 @@ def prophet_forecast(**kwargs):
         - 'train_x': Dates (DatetimeIndex) or DataFrame with 'ds' + regressors
         - 'train_y': Target values (array-like)
         - 'test_x': Future dates (DatetimeIndex) or DataFrame with 'ds' + regressors
-        - 'test_y': Future target values (array-like) - optional for prediction
         - 'holidays_train': Historical holidays
         - 'holidays_future': Future holidays
         - Prophet hyperparameters    
