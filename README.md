@@ -44,7 +44,7 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 
 Here are a few sample snippets from a subset of offerings:
 
-### **Backtesting of all Multivariate and Univariate models**
+### **Future Horizon Forecasting and Backtesting of all Multivariate and Univariate models**
 
 ```python
 import numpy as np
