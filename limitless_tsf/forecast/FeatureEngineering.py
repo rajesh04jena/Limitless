@@ -100,10 +100,10 @@ class FeatureGen:
             training_features = model.dynamics
             X = pd.DataFrame(
                 np.nan, index=list(range(lag_values)), columns=X.columns
-            ).append(X)
+            )._append(X)
             training_features = pd.DataFrame(
                 np.nan, index=list(range(lag_values)), columns=training_features.columns
-            ).append(training_features)
+            )._append(training_features)
             X_tr = pd.concat([X, training_features], axis=1)
             X_tr = X_tr.replace([np.nan , 'None'],0)   
             return X_tr
@@ -158,12 +158,13 @@ class FeatureGen:
         elif self.feature_selection_method == "SequentialFeatureSelector":
             sfs_model = SFS(
                 RandomForestRegressor(),
-                k_features=10,
+                k_features=5,
                 forward=True,
                 floating=False,
                 verbose=2,
                 scoring="r2",
                 cv=3,
+                n_jobs=-1
             )
             sfs_model = sfs_model.fit(np.array(X), y)
             selected_features = [ X_columns[i] for i in list(sfs_model.k_feature_idx_)]
