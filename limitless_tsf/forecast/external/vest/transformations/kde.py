@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.neighbors import KernelDensity
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from forecast.external.vest.preprocess.embedding import embed2seq, embed
+from limitless_tsf.forecast.external.vest.preprocess.embedding import embed2seq, embed
 
 
 class KDE(BaseEstimator, TransformerMixin):

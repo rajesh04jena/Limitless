@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn import feature_selection
 
-from forecast.external.vest.selection.correlation import filter_correlation
+from limitless_tsf.forecast.external.vest.selection.correlation import filter_correlation
 
 
 class VEST(BaseEstimator, TransformerMixin):

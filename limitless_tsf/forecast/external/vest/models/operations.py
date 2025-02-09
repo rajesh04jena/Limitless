@@ -4,12 +4,12 @@ import pandas as pd
 import time
 import warnings
 
-from forecast.external.vest.utils import transform_within_embedding_vector
-from forecast.external.vest.config.transformation_models import TRANSFORMATION_MODELS, TRANSFORMATION_MODELS_FAST
-from forecast.external.vest.config.aggregation_functions \
+from limitless_tsf.forecast.external.vest.utils import transform_within_embedding_vector
+from limitless_tsf.forecast.external.vest.config.transformation_models import TRANSFORMATION_MODELS, TRANSFORMATION_MODELS_FAST
+from limitless_tsf.forecast.external.vest.config.aggregation_functions \
     import (SUMMARY_OPERATIONS_ALL,
             SUMMARY_OPERATIONS_SMALL)
-from forecast.external.vest.config.transformation_functions \
+from limitless_tsf.forecast.external.vest.config.transformation_functions \
     import (TRANSFORMATIONS_ALL,
             TRANSFORMATIONS_FAST,
             N_PARAMETER)

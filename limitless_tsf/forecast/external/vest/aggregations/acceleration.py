@@ -1,7 +1,7 @@
 import numpy as np
 
-from forecast.external.vest.transformations.sma import SMA
-from forecast.external.vest.transformations.ema import EMA
+from limitless_tsf.forecast.external.vest.transformations.sma import SMA
+from limitless_tsf.forecast.external.vest.transformations.ema import EMA
 
 
 def acceleration(x: np.ndarray):

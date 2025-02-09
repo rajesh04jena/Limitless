@@ -1,26 +1,26 @@
 import numpy as np
 from scipy import stats
 
-from forecast.external.vest.aggregations.relative_dispersion import relative_dispersion
-from forecast.external.vest.aggregations.slope import line_slope
-from forecast.external.vest.aggregations.acceleration import acceleration
-from forecast.external.vest.aggregations.poincare_variability import st_var, lt_var
-from forecast.external.vest.aggregations.change_rates import ChangeRate
-from forecast.external.vest.aggregations.correlation import correlation_dimension1, correlation_dimension2
-from forecast.external.vest.aggregations.crossing import CrossingPoints
-from forecast.external.vest.aggregations.entropy import EntropyFeatures
-from forecast.external.vest.aggregations.gini import gini_index
-from forecast.external.vest.aggregations.hjorth import HjorthFeatures
-from forecast.external.vest.aggregations.fractal_dimension import FractalDimensionFeatures
-from forecast.external.vest.aggregations.peaks import PeaksFeatures
-from forecast.external.vest.aggregations.ljungbox import ljung_box_test
-from forecast.external.vest.aggregations.autocorrelation import avg_acf, avg_pacf
-from forecast.external.vest.aggregations.percentiles import p05, p95, p01, p99
-from forecast.external.vest.aggregations.norm import norm
-from forecast.external.vest.aggregations.lyapunov import mle
-from forecast.external.vest.aggregations.hurst import hurst
-from forecast.external.vest.aggregations.last_point import last_point
-from forecast.external.vest.aggregations.fft import fft_amplitude
+from limitless_tsf.forecast.external.vest.aggregations.relative_dispersion import relative_dispersion
+from limitless_tsf.forecast.external.vest.aggregations.slope import line_slope
+from limitless_tsf.forecast.external.vest.aggregations.acceleration import acceleration
+from limitless_tsf.forecast.external.vest.aggregations.poincare_variability import st_var, lt_var
+from limitless_tsf.forecast.external.vest.aggregations.change_rates import ChangeRate
+from limitless_tsf.forecast.external.vest.aggregations.correlation import correlation_dimension1, correlation_dimension2
+from limitless_tsf.forecast.external.vest.aggregations.crossing import CrossingPoints
+from limitless_tsf.forecast.external.vest.aggregations.entropy import EntropyFeatures
+from limitless_tsf.forecast.external.vest.aggregations.gini import gini_index
+from limitless_tsf.forecast.external.vest.aggregations.hjorth import HjorthFeatures
+from limitless_tsf.forecast.external.vest.aggregations.fractal_dimension import FractalDimensionFeatures
+from limitless_tsf.forecast.external.vest.aggregations.peaks import PeaksFeatures
+from limitless_tsf.forecast.external.vest.aggregations.ljungbox import ljung_box_test
+from limitless_tsf.forecast.external.vest.aggregations.autocorrelation import avg_acf, avg_pacf
+from limitless_tsf.forecast.external.vest.aggregations.percentiles import p05, p95, p01, p99
+from limitless_tsf.forecast.external.vest.aggregations.norm import norm
+from limitless_tsf.forecast.external.vest.aggregations.lyapunov import mle
+from limitless_tsf.forecast.external.vest.aggregations.hurst import hurst
+from limitless_tsf.forecast.external.vest.aggregations.last_point import last_point
+from limitless_tsf.forecast.external.vest.aggregations.fft import fft_amplitude
 
 peaks_features = PeaksFeatures()
 fractal_features = FractalDimensionFeatures()

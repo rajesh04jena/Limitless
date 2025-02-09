@@ -7,7 +7,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.impute import KNNImputer
 from sklearn.decomposition import PCA
 from dask import delayed, compute
-from forecast.models import (
+from limitless_tsf.forecast.models import (
     linear_regression_forecast,
     lasso_regression_forecast,
     ridge_regression_forecast,
@@ -24,7 +24,7 @@ from forecast.models import (
     tbats_forecast,
     prophet_forecast,
 )
-from forecast.FeatureEngineering import FeatureGen
+from limitless_tsf.forecast.FeatureEngineering import FeatureGen
 
 np.bool = np.bool_
 
@@ -349,6 +349,7 @@ if __name__ == "__main__":
     ]
 
     n_periods = 10  # Number of future time steps to forecast
+    backtest_periods = 5  # Number of backward time steps to forecast
     forecast_results = combined_forecast(
         data,
         target_col="target",

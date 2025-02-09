@@ -1,5 +1,5 @@
-from forecast.external.vest.transformations.kde import KDE
-from forecast.external.vest.transformations.power import PowerTransform
+from limitless_tsf.forecast.external.vest.transformations.kde import KDE
+from limitless_tsf.forecast.external.vest.transformations.power import PowerTransform
 
 TRANSFORMATION_MODELS = \
     dict(kde=KDE,

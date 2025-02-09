@@ -40,7 +40,64 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 | **Random Forest Regression**   | **Simple Exponential Smoothing**|                                |
 |                                | **Prophet**                     |                                |
 
-## **Usage**
+# **Usage**
 
-- **Coming Soon** - All the mentioned salient features will be rolled out soon and will replace your incumbent and expensive forecasting tool
+Here are a few sample snippets from a subset of offerings:
 
+### **Backtesting of all Multivariate and Univariate models**
+
+```python
+import numpy as np
+import pandas as pd
+from limitless_tsf.predict import combined_forecast
+
+data = pd.DataFrame(
+    {
+        "date": pd.date_range(start="2023-01-01", periods=30, freq="D"),
+        "feature1": np.random.randint(1, 100, 30),
+        "feature2": np.random.choice(["A", "B", "C"], 30),
+        "feature3": np.random.randn(30) * 10,
+        "feature4": np.random.uniform(5, 50, 30),
+        "target": np.random.randint(10, 200, 30),
+    }
+)
+
+models_to_use = [
+    "linear_regression_forecast",
+    "lasso_regression_forecast",
+    "ridge_regression_forecast",
+    "xgboost_regression_forecast",
+    "lightgbm_regression_forecast",
+    "random_forest_regression_forecast",
+    "catboost_regression_forecast",
+    "seasonal_naive_forecast",
+    "auto_arima_forecast",
+    "simple_exponential_smoothing",
+    "double_exponential_smoothing",
+    "holt_winters_forecast",
+    "croston_tsb_forecast",
+    "tbats_forecast",
+    "prophet_forecast",
+]
+
+n_periods = 10  # Number of future time steps to forecast
+backtest_periods = 5  # Number of backward time steps to forecast
+
+forecast_results = combined_forecast(
+    data,
+    target_col="target",
+    model_list=models_to_use,
+    n_periods=n_periods,
+    mode="forward",
+)
+
+backtest_results = combined_forecast(
+    data,
+    target_col="target",
+    model_list=models_to_use,
+    n_periods=n_periods,
+    mode="backtest",
+    backtest_periods=5,
+)
+
+```

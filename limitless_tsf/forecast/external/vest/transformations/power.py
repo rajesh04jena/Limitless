@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import PowerTransformer
 
-from forecast.external.vest.preprocess.embedding import embed2seq, embed
+from limitless_tsf.forecast.external.vest.preprocess.embedding import embed2seq, embed
 
 
 class PowerTransform(BaseEstimator, TransformerMixin):

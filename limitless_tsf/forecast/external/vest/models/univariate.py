@@ -2,12 +2,12 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 
-from forecast.external.vest.models.base import VEST
+from limitless_tsf.forecast.external.vest.models.base import VEST
 
-from forecast.external.vest.preprocess.numeric import NumericPreprocess
-from forecast.external.vest.models.operations import Operations
-from forecast.external.vest.config.aggregation_functions import SUMMARY_OPERATIONS_ALL
-from forecast.external.vest.utils import good_feats_indicator
+from limitless_tsf.forecast.external.vest.preprocess.numeric import NumericPreprocess
+from limitless_tsf.forecast.external.vest.models.operations import Operations
+from limitless_tsf.forecast.external.vest.config.aggregation_functions import SUMMARY_OPERATIONS_ALL
+from limitless_tsf.forecast.external.vest.utils import good_feats_indicator
 
 
 class UnivariateVEST(VEST):

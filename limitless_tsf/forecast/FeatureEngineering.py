@@ -8,11 +8,11 @@
 import warnings
 import numpy as np
 import pandas as pd
-from forecast.external.vest.preprocess.embedding import embed_with_target
-from forecast.external.vest.models.univariate import UnivariateVEST
+from limitless_tsf.forecast.external.vest.preprocess.embedding import embed_with_target
+from limitless_tsf.forecast.external.vest.models.univariate import UnivariateVEST
 from pmdarima.arima import auto_arima
-from forecast.external.vest.config.aggregation_functions import SUMMARY_OPERATIONS_FAST
-from forecast.external.datetime.datetime_features import add_datepart
+from limitless_tsf.forecast.external.vest.config.aggregation_functions import SUMMARY_OPERATIONS_FAST
+from limitless_tsf.forecast.external.datetime.datetime_features import add_datepart
 
 
 from sklearn.preprocessing import (
