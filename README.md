@@ -51,7 +51,7 @@ git clone git@github.com:rajesh04jena/DemandForecast.git
 cd DemandForecast
 ```
 
-Step 2: Create a conda environment, install dependencies and launch IDE
+Step 2: Create a conda environment(limtless-test-env), install dependencies and launch IDE
 
 Alternative 1(execute command in terminal sequentially) :
 
@@ -66,11 +66,18 @@ Alternative 1(execute command in terminal sequentially) :
 ```
 
 Alternative 2(execute command in terminal sequentially) :
+
 ```sh
 conda env create -f environment.yml
 conda activate limtless-test-env
 jupyter notebook
 ```
+
+## Need Help with Installation?  
+
+If you have any questions or need assistance with the installation, feel free to reach out:  
+
+📧 **Email:** [jenarajesh.nitt@gmail.com](mailto:jenarajesh.nitt@gmail.com)  
 
 # **Example Usage**
 
