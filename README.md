@@ -40,7 +40,39 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 | **Random Forest Regression**   | **Simple Exponential Smoothing**|                                |
 |                                | **Prophet**                     |                                |
 
-# **Usage**
+
+# **Installation**
+
+Step 1: Clone this repository to your local machine and
+         navigate to the project directory
+```sh
+git init
+git clone git@github.com:rajesh04jena/DemandForecast.git
+cd DemandForecast
+```
+
+Step 2: Create a conda environment, install dependencies and launch IDE
+
+Alternative 1(execute command in terminal sequentially) :
+
+```sh
+ conda create -n limtless-test-env
+ conda activate limtless-test-env
+ conda install conda-forge::catboost
+ conda install dask
+ conda install conda-forge::prophet
+ pip install -r requirements.txt
+ jupyter notebook 
+```
+
+Alternative 2(execute command in terminal sequentially) :
+```sh
+conda env create -f environment.yml
+conda activate limtless-test-env
+jupyter notebook
+```
+
+# **Example Usage**
 
 Here are a few sample snippets from a subset of offerings:
 
