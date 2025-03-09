@@ -26,6 +26,8 @@ from sklearn.ensemble import RandomForestRegressor
 import lightgbm as lgb
 import catboost as cb
 from prophet import Prophet
+from statsmodels.tsa.seasonal import seasonal_decompose
+from datetime import datetime, timedelta
 
 def linear_regression_forecast(**kwargs):
     """
@@ -1089,19 +1091,19 @@ def croston_tsb_forecast(**kwargs):
 
 def tbats_forecast(**kwargs):
     """
-    Perform a multi-seasonality forecast using the TBATS model, 
-    capturing multiple seasonalities in the time series.    
+    Perform a multi-seasonality forecast using the TBATS model,
+    capturing multiple seasonalities in the time series.
     Parameters:
     - kwargs: Keyword arguments that can include:
         - 'train_y': The training time series data (a numpy array).
         - 'test_x': The auto-generated test time series feature data
         - 'seasonal_periods': A list of seasonal periods (e.g., [12, 7] for yearly and weekly seasonality).
         - 'n_jobs': The number of jobs to run in parallel (default is -1 to use all available CPUs).
-    
+
     Returns:
     - Y_fitted : A numpy array containing the fitted values for training data.
     - Y_pred: A numpy array containing the predicted values for test data.
-    - model: The fitted TBATS model(T: Trigonometric seasonality , 
+    - model: The fitted TBATS model(T: Trigonometric seasonality ,
         B: Box-Cox transformation
         A: ARIMA errors
         T: Trend
@@ -1120,34 +1122,76 @@ def tbats_forecast(**kwargs):
     model_params = {'seasonal_periods' : [12,7]}
     # Using kwargs to pass train_x, test_x, and season_length
 
-    fitted, predicted, model  = tbats_forecast(train_x= train_x , test_x=test_x , 
+    fitted, predicted, model  = tbats_forecast(train_x= train_x , test_x=test_x ,
                                        train_y =  train_y, model_params = model_params)
     # Output the predicted values
     print("Predicted Test Values:", predicted)
-    
-    """    
-    # Extract values from kwargs    
-    train_x, train_y, test_x = (
-        kwargs["train_x"],
-        kwargs["train_y"],
-        kwargs["test_x"]        
-    )
-    seasonal_periods = kwargs["model_params"]["seasonal_periods"]    
+
+    """
+    # Extract values from kwargs
+    train_x, train_y, test_x = (kwargs["train_x"], kwargs["train_y"], kwargs["test_x"])
+    seasonal_periods = kwargs["model_params"]["seasonal_periods"]
     # Initialize TBATS model with seasonal periods
-    model = TBATS(seasonal_periods=seasonal_periods)    
+    model = TBATS(seasonal_periods=seasonal_periods)
     # Fit the model on training data
-    model = model.fit(train_y)    
+    model = model.fit(train_y)
     # Forecast the next 'test_len' periods
-    Y_pred = model.forecast(steps= len(test_x))    
+    Y_pred = model.forecast(steps=len(test_x))
     # Combine the original training data with the forecasted values
     # Get the fitted values (in-train predictions)
     Y_fitted = model.y_hat
 
     return Y_fitted, Y_pred, model
 
+def identify_date_and_frequency(data):
+    """Helper function to identify date column and its frequency"""
+    if isinstance(data, pd.DatetimeIndex):
+        return "ds", infer_frequency(data)
+    elif isinstance(data, pd.DataFrame):
+        # Look for 'ds' column first (Prophet's default)
+        if "ds" in data.columns:
+            date_col = "ds"
+        # Then look for any datetime column
+        else:
+            date_cols = [
+                col
+                for col in data.columns
+                if pd.api.types.is_datetime64_any_dtype(data[col])
+            ]
+            date_col = date_cols[0] if date_cols else None
+
+        if date_col:
+            return date_col, infer_frequency(data[date_col])
+    return None, None
+
+def infer_frequency(date_series):
+    """Infer frequency from date series with fallback options"""
+    # Try pandas' infer_freq first
+    freq = pd.infer_freq(date_series)
+
+    if freq is None and len(date_series) >= 2:
+        # Calculate median time difference if pandas infer_freq fails
+        time_diff = pd.Series(date_series).diff().median()
+
+        # Map time differences to common frequencies
+        if time_diff <= pd.Timedelta(days=1):
+            freq = "D"  # Daily
+        elif time_diff <= pd.Timedelta(days=7):
+            freq = "W"  # Weekly
+        elif time_diff <= pd.Timedelta(days=31):
+            freq = "M"  # Monthly
+        elif time_diff <= pd.Timedelta(days=92):
+            freq = "Q"  # Quarterly
+        else:
+            freq = "Y"  # Yearly
+
+    return freq
+
 def prophet_forecast(**kwargs):
     """
-    Perform univariate or multivariate forecasting using Prophet    
+    Perform univariate or multivariate forecasting using Prophet with support for multiple date frequencies
+    (daily, weekly, monthly, quarterly, yearly, etc.)
+
     Parameters:
     - kwargs: Keyword arguments including:
         - 'train_x': Dates (DatetimeIndex) or DataFrame with 'ds' + regressors
@@ -1155,96 +1199,144 @@ def prophet_forecast(**kwargs):
         - 'test_x': Future dates (DatetimeIndex) or DataFrame with 'ds' + regressors
         - 'holidays_train': Historical holidays
         - 'holidays_future': Future holidays
-        - Prophet hyperparameters    
+        - 'frequency': Optional explicit frequency string ('D', 'W', 'M', 'Q', 'Y', etc.)
+        - Prophet hyperparameters
+
     Returns:
         - Y_fitted: Fitted values
         - Y_pred: Forecasted values
         - model: Trained Prophet model
-    Usage :    
-    #Univariate Forecasting
-    # Simple time series without external regressors
+
+    Usage:
+
+    # Daily Data Example
     train_x = pd.date_range(start='2023-01-01', periods=100, freq='D')
     train_y = np.random.randn(100).cumsum() + 100
     test_x = pd.date_range(start='2023-04-10', periods=30, freq='D')
-    # Run forecast
     fitted, predicted, model = prophet_forecast(
         train_x=train_x,
         train_y=train_y,
         test_x=test_x
     )
-    print("Forecasted Data: ", predicted)
-    #Multivariate Forecasting
-    # Create dataset with regressors
-    train_data = pd.DataFrame({
-        'ds': pd.date_range(start='2023-01-01', periods=100, freq='D'),
-        'sales': np.random.randn(100).cumsum() + 100,  # Target
-        'marketing_spend': np.random.uniform(1000, 5000, 100),
-        'holiday_flag': np.random.choice([0, 1], 100, p=[0.9, 0.1])
-    })
-    test_data = pd.DataFrame({
-        'ds': pd.date_range(start='2023-04-10', periods=30, freq='D'),
-        'marketing_spend': np.random.uniform(1000, 5000, 30),
-        'holiday_flag': np.zeros(30)  # Assume no future holidays
-    })
-    # Run forecast with external regressors
+
+    # Monthly Data Example
+    train_x = pd.date_range(start='2010-01-01', periods=60, freq='M')
+    train_y = np.random.randn(60).cumsum() + 100
+    test_x = pd.date_range(start='2015-01-01', periods=12, freq='M')
     fitted, predicted, model = prophet_forecast(
-        train_x=train_data[['ds', 'marketing_spend', 'holiday_flag']],
-        train_y=train_data['sales'],
-        test_x=test_data
+        train_x=train_x,
+        train_y=train_y,
+        test_x=test_x,
+        frequency='M',
+        yearly_seasonality=True,
+        weekly_seasonality=False,
+        daily_seasonality=False
     )
-    print("Forecasted Data: ", predicted)    
     """
+
     # Extract core data
-    train_x = kwargs["train_x"]
-    train_y = kwargs["train_y"]
-    test_x = kwargs["test_x"]
-    
+    train_x = kwargs.get("train_x")
+    train_y = kwargs.get("train_y")
+    test_x = kwargs.get("test_x")
+
+    try:
+        train_x["Date"] = pd.to_datetime(
+            train_x["Year"].map(int).map(str)
+            + "-"
+            + train_x["Month"].map(int).astype(str).str.zfill(2)
+            + "-"
+            + train_x["Day"].map(int).astype(str).str.zfill(2)
+        )
+    except:
+        current_date = datetime.now().date()
+
+        # Create a range of dates starting from current date
+        # with the same length as the DataFrame
+        num_rows = len(train_x)
+        date_range = [current_date - timedelta(days=i) for i in range(num_rows)]
+
+        # Add the dates in reverse order (most recent first)
+        date_range.reverse()
+
+        # Add the date column to the DataFrame
+        train_x["Date"] = date_range
+
+    try:
+        test_x["Date"] = pd.to_datetime(
+            test_x["Year"].map(int).map(str)
+            + "-"
+            + test_x["Month"].map(int).astype(str).str.zfill(2)
+            + "-"
+            + test_x["Day"].map(int).astype(str).str.zfill(2)
+        )
+    except:
+        test_date_start = datetime.now().date() + timedelta(days=1)
+
+        # Create a range of dates starting from current date
+        # with the same length as the DataFrame
+        num_rows = len(test_x)
+        date_range = [test_date_start + timedelta(days=i) for i in range(num_rows)]
+
+        # Add the date column to the DataFrame
+        test_x["Date"] = date_range
+
+    # Get date column and frequency
+    date_col, freq = identify_date_and_frequency(train_x)
+
     # Prepare training dataframe
     if isinstance(train_x, pd.DataFrame):
         df_train = train_x.copy()
-        df_train['y'] = train_y
+        if "ds" not in df_train.columns and date_col:
+            df_train["ds"] = df_train[date_col]
+        df_train["y"] = train_y
+
     else:
-        df_train = pd.DataFrame({
-            'ds': pd.to_datetime(train_x),
-            'y': train_y
-        })
+        df_train = pd.DataFrame({"ds": pd.to_datetime(train_x), "y": train_y})
 
     # Prepare test dataframe (future data)
     if isinstance(test_x, pd.DataFrame):
         df_test = test_x.copy()
+        if "ds" not in df_test.columns and date_col:
+            df_test["ds"] = df_test[date_col]
     else:
-        df_test = pd.DataFrame({
-            'ds': pd.to_datetime(test_x)
-        })
+        df_test = pd.DataFrame({"ds": pd.to_datetime(test_x)})
 
     # Identify regressor columns (exclude ds/y)
-    regressor_cols = [col for col in df_train.columns 
-                     if col not in ['ds', 'y'] and not col.startswith('holiday')]
+    regressor_cols = [
+        col
+        for col in df_train.columns
+        if col not in ["ds", "y", date_col] and not col.startswith("holiday")
+    ]
 
     # Handle holidays
-    holidays = pd.concat([
-        kwargs.get("holidays_train", pd.DataFrame()),
-        kwargs.get("holidays_future", pd.DataFrame())
-    ]).drop_duplicates('ds')
+    holidays = (
+        pd.concat(
+            [
+                kwargs.get("holidays_train", pd.DataFrame()),
+                kwargs.get("holidays_future", pd.DataFrame()),
+            ]
+        ).drop_duplicates("ds")
+        if any(["holidays_train" in kwargs, "holidays_future" in kwargs])
+        else pd.DataFrame()
+    )
 
     # Seasonality mode detection
     mean_y = np.mean(train_y)
     if mean_y == 0:
-        seasonality_mode = 'additive'
+        seasonality_mode = "additive"
     else:
         seasonal_variation = np.std(train_y) / mean_y
-        seasonality_mode = 'multiplicative' if seasonal_variation > 0.2 else 'additive'
-
-    # Initialize model
+        seasonality_mode = "multiplicative" if seasonal_variation > 0.2 else "additive"
+    # Initialize model with frequency-appropriate seasonality
     model = Prophet(
         holidays=holidays if not holidays.empty else None,
         n_changepoints=kwargs.get("n_changepoints", 25),
         changepoint_range=kwargs.get("changepoint_range", 0.8),
-        seasonality_mode=seasonality_mode,
+        seasonality_mode=kwargs.get("seasonality_mode", seasonality_mode),
         seasonality_prior_scale=kwargs.get("seasonality_prior_scale", 10.0),
         changepoint_prior_scale=kwargs.get("changepoint_prior_scale", 0.05),
         interval_width=kwargs.get("interval_width", 0.80),
-        uncertainty_samples=kwargs.get("uncertainty_samples", 1000)
+        uncertainty_samples=kwargs.get("uncertainty_samples", 1000),
     )
 
     # Add regressors for multivariate case
@@ -1255,11 +1347,213 @@ def prophet_forecast(**kwargs):
     model.fit(df_train)
 
     # Prepare future dataframe with regressors
-    future = df_test[['ds'] + regressor_cols].copy()
+    future_cols = ["ds"] + regressor_cols
+    available_cols = [col for col in future_cols if col in df_test.columns]
+    future = df_test[available_cols].copy()
 
     # Make prediction
     forecast = model.predict(future)
-    Y_pred = forecast['yhat'].values
-    Y_fitted = model.predict(df_train)['yhat'].values
+    Y_pred = forecast["yhat"].values
+    Y_fitted = model.predict(df_train[["ds"] + regressor_cols])["yhat"].values
 
     return Y_fitted, Y_pred, model
+
+def theta_forecast(**kwargs):
+    """
+    Perform forecasting using the Dynamic Theta model with drift, which is especially
+    effective for time series with strong trends and seasonality.
+
+    Parameters:
+    - kwargs: Keyword arguments that can include:
+        - 'train_x': The training time series feature data (a pandas DataFrame or numpy array).
+        - 'train_y': The training time series target data (a numpy array).
+        - 'test_x': The test time series feature data (for forecasting horizon).
+        - 'model_params': A dictionary containing model parameters:
+            - 'theta': Theta multiplier (default: 2.0).
+            - 'seasonality': Boolean indicating whether to apply seasonal decomposition (default: True).
+            - 'season_length': Length of seasonality (e.g., 12 for monthly, 7 for weekly).
+            - 'drift': Boolean indicating whether to include drift term (default: True).
+            - 'alpha': Smoothing parameter for the level (0 < alpha < 1).
+            - 'beta': Smoothing parameter for the trend (0 < beta < 1).
+
+    Returns:
+    - Y_fitted: A numpy array containing the fitted values for training data.
+    - Y_pred: A numpy array containing the predicted values for test data.
+    - model: The fitted Dynamic Theta model object containing parameters and states.
+
+    Example Usage:
+    train_feature_1 = [300.0, 722.0, 184.0, 913.0, 635.0, 427.0,
+                       538.0, 118.0, 212.0, 103, 200, 300]
+    train_feature_2 = [41800.0, 0.0, 12301.0, 88104.0, 21507.0, 98501.0,
+                       38506.0, 84499.0, 84004.0, 71002, 16900, 120301]
+    train_x = pd.DataFrame({'feature_1': train_feature_1, 'feature_2': train_feature_2}).values
+    test_feature_1 = [929.0, 148.0, 718.0, 282.0]
+    test_feature_2 = [98501.0, 38506.0, 84499.0, 84004.0]
+    test_x = pd.DataFrame({'feature_1': test_feature_1, 'feature_2': test_feature_2}).values
+    train_y = np.array([100, 120, 130, 140, 110, 115, 150, 160, 170, 165, 180, 190])
+    model_params = {'theta': 2.0, 'seasonality': True, 'season_length': 12, 'drift': True, 'alpha': 0.2, 'beta': 0.1}
+
+    # Using kwargs to pass parameters
+    fitted, predicted, model = theta_forecast(train_x=train_x, test_x=test_x,
+                                                    train_y=train_y, model_params=model_params)
+    # Output the predicted values
+    print("Predicted Test Values:", predicted)
+    """
+
+    # Extract values from kwargs
+    train_x = kwargs.get("train_x")
+    train_y = kwargs.get("train_y")
+    test_x = kwargs.get("test_x")
+    model_params = kwargs.get("model_params", {})
+
+    # Extract model parameters with defaults
+    theta = model_params.get("theta", 2.0)
+    seasonality = model_params.get("seasonality", True)
+    season_length = model_params.get("season_length", 12)
+    use_drift = model_params.get("drift", True)
+    alpha = model_params.get("alpha", 0.2)
+    beta = model_params.get("beta", 0.1)
+
+    # Create a Dynamic Theta model class for encapsulation
+    class DynamicThetaModel:
+        def __init__(self, theta, seasonality, season_length, use_drift, alpha, beta):
+            self.theta = theta
+            self.seasonality = seasonality
+            self.season_length = season_length
+            self.use_drift = use_drift
+            self.alpha = alpha
+            self.beta = beta
+            self.level = None
+            self.trend = None
+            self.seasonal_indices = None
+            self.y_hat = None
+            self.drift_value = None
+
+        def fit(self, y):
+            """Fit the Dynamic Theta model to training data"""
+            n = len(y)
+
+            # Handle seasonality if requested
+            if self.seasonality and n >= 2 * self.season_length:
+                try:
+                    # Convert to pandas Series for seasonal decomposition
+                    y_series = pd.Series(y)
+                    decomposition = seasonal_decompose(
+                        y_series, period=self.season_length, model="multiplicative"
+                    )
+                    seasonal = decomposition.seasonal
+                    deseasonalized = y / seasonal
+
+                    # Store seasonal indices
+                    self.seasonal_indices = np.array(
+                        [seasonal[i % len(seasonal)] for i in range(n)]
+                    )
+                except:
+                    # Fall back to no seasonality if decomposition fails
+                    print(
+                        "Warning: Seasonal decomposition failed, proceeding without seasonality"
+                    )
+                    deseasonalized = y
+                    self.seasonality = False
+            else:
+                deseasonalized = y
+                self.seasonality = False
+
+            # Initialize level and trend
+            self.level = deseasonalized[0]
+            self.trend = deseasonalized[1] - deseasonalized[0] if n > 1 else 0
+
+            # Calculate drift term if requested
+            if self.use_drift and n > 1:
+                self.drift_value = (deseasonalized[-1] - deseasonalized[0]) / (n - 1)
+            else:
+                self.drift_value = 0
+
+            # Apply exponential smoothing with Theta modification
+            fitted_values = np.zeros(n)
+
+            # First LES component (theta=0 SES - no trend)
+            ses_values = np.zeros(n)
+            level_ses = deseasonalized[0]
+            for t in range(n):
+                ses_values[t] = level_ses
+                level_ses = level_ses + self.alpha * (deseasonalized[t] - level_ses)
+
+            # Second component (theta=self.theta, double exponential smoothing)
+            des_values = np.zeros(n)
+            level_des = deseasonalized[0]
+            trend_des = self.trend
+            for t in range(n):
+                des_values[t] = level_des
+                error = deseasonalized[t] - level_des
+                level_des = level_des + self.alpha * error
+                trend_des = trend_des + self.beta * error
+
+                # Apply theta coefficient to the trend component
+                level_des = level_des + self.theta * trend_des
+
+            # Combine components
+            for t in range(n):
+                # Weight between SES and DES with theta parameter
+                fitted_values[t] = (2 - 1 / self.theta) * ses_values[t] + (
+                    1 / self.theta
+                ) * des_values[t]
+
+                # Add drift component
+                if self.use_drift:
+                    fitted_values[t] += t * self.drift_value
+
+            # Reapply seasonality
+            if self.seasonality:
+                fitted_values = fitted_values * self.seasonal_indices
+
+            self.y_hat = fitted_values
+            return self
+
+        def forecast(self, steps):
+            """Generate forecasts for future periods"""
+            forecast_values = np.zeros(steps)
+
+            # Generate future seasonal indices if needed
+            future_seasonal = None
+            if self.seasonality and self.seasonal_indices is not None:
+                future_seasonal = np.array(
+                    [
+                        self.seasonal_indices[i % len(self.seasonal_indices)]
+                        for i in range(len(self.y_hat), len(self.y_hat) + steps)
+                    ]
+                )
+
+            # First component (SES)
+            ses_forecast = np.full(steps, self.level)
+
+            # Second component (DES with theta)
+            des_forecast = np.zeros(steps)
+            for i in range(steps):
+                des_forecast[i] = self.level + (i + 1) * self.theta * self.trend
+
+            # Combine forecasts
+            for i in range(steps):
+                forecast_values[i] = (2 - 1 / self.theta) * ses_forecast[i] + (
+                    1 / self.theta
+                ) * des_forecast[i]
+
+                # Add drift component
+                if self.use_drift:
+                    forecast_values[i] += (len(self.y_hat) + i) * self.drift_value
+
+            # Reapply seasonality
+            if self.seasonality and future_seasonal is not None:
+                forecast_values = forecast_values * future_seasonal
+
+            return forecast_values
+
+    # Create and fit the model
+    model = DynamicThetaModel(theta, seasonality, season_length, use_drift, alpha, beta)
+    model = model.fit(train_y)
+
+    # Generate forecasts
+    Y_pred = model.forecast(steps=len(test_x))
+
+    # Return fitted values, predictions, and model
+    return model.y_hat, Y_pred, model

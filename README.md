@@ -38,7 +38,7 @@ By offering a **user-friendly interface** and a suite of modern time series fore
 | **Light GBM Regression**       | **Seasonal Naive Forecast**     | **Simple Average Stacking**    |
 | **Catboost Regression**        | **Auto ARIMA**                  |                                |
 | **Random Forest Regression**   | **Simple Exponential Smoothing**|                                |
-|                                | **Prophet**                     |                                |
+| **Prophet Multivariate**       | **Dynamic Theta**               |                                |
 
 
 # **Installation**
@@ -117,6 +117,7 @@ models_to_use = [
     "croston_tsb_forecast",
     "tbats_forecast",
     "prophet_forecast",
+    "theta_forecast"
 ]
 
 n_periods = 10  # Number of future time steps to forecast

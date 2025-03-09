@@ -23,6 +23,7 @@ from limitless_tsf.forecast.models import (
     croston_tsb_forecast,
     tbats_forecast,
     prophet_forecast,
+    theta_forecast,
 )
 from limitless_tsf.forecast.FeatureEngineering import FeatureGen
 
@@ -131,7 +132,7 @@ def model_forecast(model_name, train_x, train_y, test_x, model_params):
     try:
         model_func = globals().get(model_name)
         if model_func:
-            _, preds, _ = model_func(
+            fitted, preds, fitted_model = model_func(
                 train_x=train_x,
                 train_y=train_y,
                 test_x=test_x,
@@ -143,6 +144,117 @@ def model_forecast(model_name, train_x, train_y, test_x, model_params):
         return []
 
 
+def check_and_forecast(df, date_col, target_col, frequency):
+    """
+    Check if a time series contains at least 2 cycles of data before forecasting.
+
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        DataFrame containing the time series data
+    date_col : str
+        Name of the column containing dates
+    target_col : str
+        Name of the column containing the target variable to forecast
+    frequency : str, optional
+        Frequency of the data. Options: 'daily', 'weekly', 'monthly', 'quarterly', 'yearly'
+
+    Returns:
+    --------
+    tuple
+        (forecast_df, has_sufficient_cycles, period_length, num_cycles)
+        forecast_df: DataFrame with forecasts (None if insufficient cycles)
+        has_sufficient_cycles: Boolean indicating if at least 2 cycles were detected
+        period_length: Detected period length in the original frequency units
+        num_cycles: Number of complete cycles in the data
+    """
+    # Ensure the date column is in datetime format and set as index
+    df = df.copy()
+    df[date_col] = pd.to_datetime(df[date_col])
+    df = df.sort_values(by=date_col)
+
+    # Determine the period length based on frequency
+    if frequency == "D":
+        # For daily data, try to detect weekly (7) or monthly (30) patterns
+        possible_periods = [7, 30, 365]
+        min_data_points = 60  # Require at least 60 days for meaningful cycle detection
+    elif frequency == "W":
+        # For weekly data, look for monthly (4) or quarterly (13) or yearly (52) patterns
+        possible_periods = [4, 13, 52]
+        min_data_points = 30  # Require at least 30 weeks
+    elif frequency == "M":
+        # For monthly data, look for quarterly (3) or yearly (12) patterns
+        possible_periods = [3, 12]
+        min_data_points = 24  # Require at least 24 months
+    elif frequency == "Q":
+        # For quarterly data, look for yearly (4) or multi-year patterns
+        possible_periods = [4, 8]
+        min_data_points = 12  # Require at least 12 quarters (3 years)
+    elif frequency == "Y":
+        # For yearly data, cycles are typically multi-year
+        possible_periods = [2, 5, 10]
+        min_data_points = 15  # Require at least 15 years
+    else:
+        raise ValueError(
+            "Frequency must be 'daily', 'weekly', 'monthly', 'quarterly', or 'yearly'"
+        )
+
+    # Check if we have enough data points
+    if len(df) < min_data_points:
+        return False, None, 0
+
+    # Find the best period using autocorrelation
+    best_period = detect_best_period(df[target_col], possible_periods)
+
+    # Calculate how many complete cycles we have
+    num_cycles = len(df) / best_period
+
+    # Check if we have at least 2 complete cycles
+    has_sufficient_cycles = num_cycles >= 2
+
+    # If we have sufficient cycles, run the forecast
+    if has_sufficient_cycles:
+        return True, best_period, num_cycles
+    else:
+        return False, best_period, num_cycles
+
+
+def detect_best_period(series, possible_periods):
+    """
+    Detect the best period from a list of possible periods using autocorrelation.
+
+    Parameters:
+    -----------
+    series : pandas.Series
+        Target time series data
+    possible_periods : list
+        List of possible period lengths to check
+
+    Returns:
+    --------
+    int
+        Best detected period length
+    """
+    # Fill NaN values with forward and backward fill
+    series = series.fillna(method="ffill").fillna(method="bfill")
+
+    # Calculate autocorrelation for each lag
+    autocorr = {}
+    for period in possible_periods:
+        if period < len(series) / 2:  # Ensure we have enough data for the period
+            lag_autocorr = np.corrcoef(series[period:], series[:-period])[0, 1]
+            autocorr[period] = lag_autocorr
+
+    # If no valid periods, return the shortest possible period
+    if not autocorr:
+        return min(possible_periods)
+
+    # Return the period with the highest autocorrelation
+    best_period = max(autocorr, key=autocorr.get)
+
+    return best_period
+
+
 # Forecast Combination Function
 def combined_forecast(
     df, target_col, model_list, n_periods, mode="forward", backtest_periods=None
@@ -151,6 +263,11 @@ def combined_forecast(
     results = []
 
     cleaned_df, date_col, freq = clean_data(df)
+    # Check cycles
+    has_cycles, period, num_cycles = check_and_forecast(
+        df, date_col=date_col, target_col=target_col, frequency=freq
+    )
+
     train_y = df[target_col].values
     train_x = cleaned_df.drop(columns=[target_col], errors="ignore")
 
@@ -159,10 +276,29 @@ def combined_forecast(
         start=last_date + to_offset(freq), periods=n_periods, freq=freq
     )
 
+    # Configure seasonal parameters based on frequency
     seasonal_period = 12 if freq == "M" else 7 if freq == "W" else 1
     alpha, beta, gamma = 0.8, 0.2, 0.1
 
     tbats_seasonal_periods = [12, 7] if freq in ["M", "W"] else [7]
+
+    # Set theta parameters based on frequency
+    theta_params = {
+        "theta": 2.0,
+        "seasonality": freq in ["M", "W", "D"],
+        "season_length": seasonal_period,
+        "drift": True,
+        "alpha": alpha,
+        "beta": beta,
+    }
+
+    # Set prophet parameters based on frequency
+    prophet_params = {
+        "frequency": freq,
+        "yearly_seasonality": freq in ["M", "W", "D"],
+        "weekly_seasonality": freq in ["D"],
+        "daily_seasonality": freq in ["H", "T"],
+    }
 
     date_frequency = "Monthly" if freq == "M" else "Weekly" if freq == "W" else "Daily"
     lag_values = int(seasonal_period * 2)
@@ -177,30 +313,34 @@ def combined_forecast(
         time_ft_data = cleaned_df.copy()
         time_ft_data = tsf_features.date_feature_gen(time_ft_data, date_column=date_col)
         time_ft_data = time_ft_data.drop(columns=["Elapsed", target_col])
-        try:
-            new_train_x = tsf_features.target_feature_gen(
-                1,
-                cleaned_df,
-                int(train_x.shape[0] - backtest_periods),
-                backtest_periods,
-                target_col,
-                date_frequency,
-            )
 
-            new_data = pd.concat(
-                [
-                    new_train_x.reset_index(drop=True),
-                    pd.DataFrame(df[target_col], columns=[target_col]).reset_index(
-                        drop=True
-                    ),
-                ],
-                axis=1,
-            )
-            new_train_x = new_train_x[
-                tsf_features.feature_selection(new_data, target_col)
-            ]
+        if has_cycles:
+            try:
+                new_train_x = tsf_features.target_feature_gen(
+                    1,
+                    cleaned_df,
+                    int(train_x.shape[0] - backtest_periods),
+                    backtest_periods,
+                    target_col,
+                    date_frequency,
+                )
 
-        except:
+                new_data = pd.concat(
+                    [
+                        new_train_x.reset_index(drop=True),
+                        pd.DataFrame(df[target_col], columns=[target_col]).reset_index(
+                            drop=True
+                        ),
+                    ],
+                    axis=1,
+                )
+                new_train_x = new_train_x[
+                    tsf_features.feature_selection(new_data, target_col)
+                ]
+
+            except:
+                new_train_x = pd.DataFrame()
+        else:
             new_train_x = pd.DataFrame()
 
         new_train_x = pd.concat(
@@ -215,30 +355,35 @@ def combined_forecast(
         time_ft_data_new, date_column=date_col
     )
     time_ft_data_new = time_ft_data_new.drop(columns=["Elapsed"])
-    try:
-        new_train_x_ft = tsf_features.target_feature_gen(
-            lag_values,
-            new_cleaned_data,
-            train_x.shape[0],
-            n_periods,
-            target_col,
-            date_frequency,
-        )
-        new_data_ft = pd.concat(
-            [
-                new_train_x_ft.reset_index(drop=True),
-                pd.DataFrame(
-                    pd.concat([df[target_col], df[target_col][-n_periods:]]),
-                    columns=[target_col],
-                ).reset_index(drop=True),
-            ],
-            axis=1,
-        )
-        new_train_x_ft = new_train_x_ft[
-            tsf_features.feature_selection(new_data_ft, target_col)
-        ]
 
-    except:
+    if has_cycles:
+        try:
+            new_train_x_ft = tsf_features.target_feature_gen(
+                lag_values,
+                new_cleaned_data,
+                train_x.shape[0],
+                n_periods,
+                target_col,
+                date_frequency,
+            )
+            new_data_ft = pd.concat(
+                [
+                    new_train_x_ft.reset_index(drop=True),
+                    pd.DataFrame(
+                        pd.concat([df[target_col], df[target_col][-n_periods:]]),
+                        columns=[target_col],
+                    ).reset_index(drop=True),
+                ],
+                axis=1,
+            )
+            new_train_x_ft = new_train_x_ft[
+                tsf_features.feature_selection(new_data_ft, target_col)
+            ]
+
+        except:
+            new_train_x_ft = pd.DataFrame()
+
+    else:
         new_train_x_ft = pd.DataFrame()
 
     time_ft_data_new = time_ft_data_new.drop(columns=target_col)
@@ -262,7 +407,6 @@ def combined_forecast(
             "holt_winters_forecast",
             "croston_tsb_forecast",
             "tbats_forecast",
-            "prophet_forecast",
         ]:
             model_params.update(
                 {
@@ -277,6 +421,24 @@ def combined_forecast(
                     "date_col": date_col,
                     "freq": freq,
                     "n_periods": n_periods,
+                }
+            )
+        elif model_name == "prophet_forecast":
+            model_params.update(
+                {
+                    "date_col": date_col,
+                    "freq": freq,
+                    "n_periods": n_periods,
+                    **prophet_params,
+                }
+            )
+        elif model_name == "theta_forecast":
+            model_params.update(
+                {
+                    "date_col": date_col,
+                    "freq": freq,
+                    "n_periods": n_periods,
+                    **theta_params,
                 }
             )
 
@@ -326,7 +488,7 @@ if __name__ == "__main__":
             "feature2": np.random.choice(["A", "B", "C"], 30),
             "feature3": np.random.randn(30) * 10,
             "feature4": np.random.uniform(5, 50, 30),
-            "target": np.random.randint(10, 200, 30),
+            "target": np.random.randint(100, 1000, 30),
         }
     )
 
@@ -346,6 +508,7 @@ if __name__ == "__main__":
         "croston_tsb_forecast",
         "tbats_forecast",
         "prophet_forecast",
+        "theta_forecast",
     ]
 
     n_periods = 10  # Number of future time steps to forecast
