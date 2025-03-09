@@ -8,6 +8,7 @@ from sklearn.impute import KNNImputer
 from sklearn.decomposition import PCA
 from dask import delayed, compute
 from limitless_tsf.forecast.models import (
+    holt_winters_forecast,
     linear_regression_forecast,
     lasso_regression_forecast,
     ridge_regression_forecast,
@@ -18,13 +19,14 @@ from limitless_tsf.forecast.models import (
     seasonal_naive_forecast,
     auto_arima_forecast,
     simple_exponential_smoothing,
-    double_exponential_smoothing,
-    holt_winters_forecast,
+    double_exponential_smoothing,   
     croston_tsb_forecast,
     tbats_forecast,
     prophet_forecast,
-    theta_forecast,
+    theta_forecast,  
 )
+
+from limitless_tsf.forecast.models import ensure_two_cycles
 from limitless_tsf.forecast.FeatureEngineering import FeatureGen
 
 np.bool = np.bool_
@@ -33,7 +35,6 @@ np.bool = np.bool_
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
 
 # Identify date column and frequency
 def identify_date_and_frequency(df):
@@ -77,7 +78,6 @@ def generate_future_dates(df, date_column, frequency, n_periods):
     future_df[date_column] = future_dates.values
 
     return pd.concat([df, future_df], ignore_index=True)
-
 
 # Fill missing dates and handle gaps
 def handle_missing_dates(df, date_col, freq):
@@ -254,7 +254,6 @@ def detect_best_period(series, possible_periods):
 
     return best_period
 
-
 # Forecast Combination Function
 def combined_forecast(
     df, target_col, model_list, n_periods, mode="forward", backtest_periods=None
@@ -277,7 +276,14 @@ def combined_forecast(
     )
 
     # Configure seasonal parameters based on frequency
-    seasonal_period = 12 if freq == "M" else 7 if freq == "W" else 1
+    seasonal_period = (12 if freq == "M" else  # Monthly
+    4 if freq == "Q" else   # Quarterly
+    7 if freq == "W" else   # Weekly
+    365 if freq == "D" else  # Daily
+    24 if freq == "H" else   # Hourly
+    60 if freq == "min" else  # Minutely
+    1  )
+    
     alpha, beta, gamma = 0.8, 0.2, 0.1
 
     tbats_seasonal_periods = [12, 7] if freq in ["M", "W"] else [7]
@@ -416,6 +422,7 @@ def combined_forecast(
                     "trend_smoothening_parameter": beta,
                     "seasonal_smoothening_parameter": gamma,
                     "demand_smoothening_parameter": alpha,
+                    "seasonal_length" : seasonal_period,
                     "period_length_smoothening_parameter": beta,
                     "seasonal_periods": tbats_seasonal_periods,
                     "date_col": date_col,
@@ -492,7 +499,7 @@ if __name__ == "__main__":
         }
     )
 
-    models_to_use = [
+    models_to_use = [       
         "linear_regression_forecast",
         "lasso_regression_forecast",
         "ridge_regression_forecast",
@@ -501,16 +508,15 @@ if __name__ == "__main__":
         "random_forest_regression_forecast",
         "catboost_regression_forecast",
         "seasonal_naive_forecast",
+        "holt_winters_forecast" ,         
         "auto_arima_forecast",
         "simple_exponential_smoothing",
         "double_exponential_smoothing",
-        "holt_winters_forecast",
         "croston_tsb_forecast",
         "tbats_forecast",
-        "prophet_forecast",
-        "theta_forecast",
+        "prophet_forecast"  ,
+        "theta_forecast"
     ]
-
     n_periods = 10  # Number of future time steps to forecast
     backtest_periods = 5  # Number of backward time steps to forecast
     forecast_results = combined_forecast(

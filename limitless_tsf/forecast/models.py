@@ -29,6 +29,72 @@ from prophet import Prophet
 from statsmodels.tsa.seasonal import seasonal_decompose
 from datetime import datetime, timedelta
 
+def ensure_two_cycles(train_series, freq):
+    """
+    Ensure the training series has at least 2 complete seasonal cycles based on frequency.
+    If not, it will duplicate the data to reach 2 cycles.
+    
+    Parameters:
+    -----------
+    train_series : pd.Series
+        The original training series
+    freq : str
+        Frequency identifier ('D', 'M', 'Q', 'W', 'Y', 'H', etc.)
+    
+    Returns:
+    --------
+    pd.Series
+        Series with at least 2 complete seasonal cycles
+    """
+    # Define seasonal periods for different frequencies
+    seasonal_periods = {
+        'D': 365,    # Daily (1 year)
+        'B': 260,    # Business daily (approx 260 business days in a year)
+        'W': 52,     # Weekly (52 weeks in a year)
+        'M': 12,     # Monthly (12 months in a year)
+        'Q': 4,      # Quarterly (4 quarters in a year)
+        'Y': 1,      # Yearly
+        'A': 1,      # Annual
+        'H': 24,     # Hourly (24 hours in a day)
+        'min': 60,   # Minutely (60 minutes in an hour)
+        'S': 60      # Secondly (60 seconds in a minute)
+    }
+    
+    # Handle pandas-style frequency strings (e.g., 'MS', 'QS', etc.)
+    base_freq = freq[0] if len(freq) > 1 else freq
+    period = seasonal_periods.get(base_freq, 1)
+    
+    # Get current length and determine how many duplications we need
+    current_len = len(train_series)
+    min_required_len = 2 * period
+    
+    # If we already have 2 cycles, return original series
+    if current_len >= min_required_len:
+        return train_series
+    
+    # Calculate how many copies we need to make
+    repetitions = (min_required_len // current_len) + 1
+    
+    # Create new series with repeated data
+    extended_values = np.tile(train_series.values, repetitions)[:min_required_len]
+    
+    # Create a new index if the original series has a datetime index
+    if isinstance(train_series.index, pd.DatetimeIndex):
+        # For datetime index, we need to extend the dates appropriately
+        # This is a simplified approach - you might need to adjust based on your specific needs
+        last_date = train_series.index[-1]
+        freq_offset = pd.tseries.frequencies.to_offset(freq)
+        
+        extended_index = pd.date_range(
+            start=train_series.index[0], 
+            periods=min_required_len, 
+            freq=freq_offset
+        )
+        return pd.Series(extended_values, index=extended_index)
+    else:
+        # For non-datetime index, just use a range
+        return pd.Series(extended_values, index=range(min_required_len))
+
 def linear_regression_forecast(**kwargs):
     """
     Perform a linear regression forecast, predicting the value from the corresponding period in the training set.
@@ -667,18 +733,49 @@ def seasonal_naive_forecast(**kwargs):
         kwargs["test_x"]        
     )
     season_length = kwargs["model_params"]["season_length"]
+    
+    reversed_seasonal_periods = {
+    365: 'D',    # 365 days in a year (Daily)
+    260: 'B',    # Approx 260 business days in a year (Business daily)
+    52: 'W',     # 52 weeks in a year (Weekly)
+    12: 'M',     # 12 months in a year (Monthly)
+    4: 'Q',      # 4 quarters in a year (Quarterly)
+    1: ['Y', 'A'],  # 1 period in a year (Yearly/Annual)
+    24: 'H',     # 24 hours in a day (Hourly)
+    60: ['min', 'S']  }
+    
+    if len(train_y) > 2*season_length: 
+        train_y = pd.Series(train_y)
+    else : 
+        freq = reversed_seasonal_periods[season_length]
+        train_y = ensure_two_cycles(pd.Series(train_y), freq)
+    train_y = train_y.values
+    
+    ###
+    fitted_values = np.zeros(len(train_y))
+    for i in range(len(train_y)):
+        season_index = i % season_length
+        # For the first season, we can't make predictions using seasonal pattern
+        if i < season_length:
+            fitted_values[i] = train_y[i]  # Just use actual values
+        else:
+            # Use the value from the previous season
+            fitted_values[i] = train_y[i - season_length]
+    
     # Number of observations in the test set
-    n_test = len(train_y)
+    n_test = len(test_x)
     # Create an array to store the predictions
     predicted_test_y = np.zeros(n_test)
-    # Loop through each test point and assign the value from the corresponding period in train_x
+    
+    # Loop through each test point and assign the value from the corresponding period in train_y
     for i in range(n_test):
-        # Calculate corresponding index in the seasonal period
-        season_index = (i + len(train_y) - n_test) % season_length
-        predicted_test_y[i] = train_y[
-            -season_length + season_index
-        ]  # Seasonal index in training set
-    Y_fitted = train_y
+        # Calculate corresponding seasonal index
+        season_index = (len(train_y) + i) % season_length
+        # Get the value from the last complete season in the training data
+        last_season_start = len(train_y) - season_length
+        predicted_test_y[i] = train_y[last_season_start + season_index]
+    
+    Y_fitted = fitted_values
     Y_pred =  predicted_test_y
     model = SeasonalNaiveModel(season_length=season_length)    
     return Y_fitted, Y_pred, model
@@ -911,7 +1008,7 @@ def double_exponential_smoothing(**kwargs):
     Y_pred =  np.array(forecast)
     
     return Y_fitted, Y_pred, model
-
+                             
 def holt_winters_forecast(**kwargs):
     """
     Holt-Winters forecasting using statsmodels with automatic model selection
@@ -960,34 +1057,37 @@ def holt_winters_forecast(**kwargs):
     gamma = kwargs["model_params"]["seasonal_smoothening_parameter"]
     m = kwargs["model_params"]["seasonal_length"]
     # Ensure the train data is a pandas Series
-    train_series = pd.Series(train_y)
-    # Check for additive vs multiplicative based on seasonal variation
-    seasonal_additive = np.std(
-        np.diff(train_series[:m])
-    )  # Standard deviation of first m periods (Additive test)
-    seasonal_multiplicative = np.std(
-        np.diff(np.log(train_series[:m]))
-    )  # Std of log-differenced series (Multiplicative test)
-    # Choose model based on seasonal variation
-    if seasonal_multiplicative < seasonal_additive:
-        selected_model = "multiplicative"
-    else:
-        selected_model = "additive"
+    reversed_seasonal_periods = {
+    365: 'D',    # 365 days in a year (Daily)
+    260: 'B',    # Approx 260 business days in a year (Business daily)
+    52: 'W',     # 52 weeks in a year (Weekly)
+    12: 'M',     # 12 months in a year (Monthly)
+    4: 'Q',      # 4 quarters in a year (Quarterly)
+    1: ['Y', 'A'],  # 1 period in a year (Yearly/Annual)
+    24: 'H',     # 24 hours in a day (Hourly)
+    60: ['min', 'S']  }
+    
+    if len(train_y) > 2*m: 
+        train_series = pd.Series(train_y)
+    else : 
+        freq = reversed_seasonal_periods[m]
+        train_series = ensure_two_cycles(pd.Series(train_y), freq)
+        
     # Initialize and fit the Holt-Winters model
-    model = ExponentialSmoothing(
-        train_series,
-        trend="add",  # or 'mul' for multiplicative trend
-        seasonal="add",  # or 'mul' for multiplicative seasonality
-        seasonal_periods=m,
-    ).fit(smoothing_level=alpha, smoothing_slope=beta, smoothing_seasonal=gamma)
-    # Fit the multiplicative model if chosen
-    if selected_model == "multiplicative":
+    try :
         model = ExponentialSmoothing(
             train_series,
-            trend="mul",  # Multiplicative trend
-            seasonal="mul",  # Multiplicative seasonality
+            trend="add",  # or 'mul' for multiplicative trend
+            seasonal="add",  # or 'mul' for multiplicative seasonality
             seasonal_periods=m,
         ).fit(smoothing_level=alpha, smoothing_slope=beta, smoothing_seasonal=gamma)
+    except :
+        model = ExponentialSmoothing(
+            train_series,
+            seasonal_periods=m,
+        ).fit(smoothing_level=alpha, smoothing_slope=beta, smoothing_seasonal=gamma)
+    
+    
     # Forecast the test periods
     Y_pred = model.forecast(len(test_x))
     # Get the fitted values (in-train predictions)
