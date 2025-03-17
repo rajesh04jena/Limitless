@@ -79,7 +79,7 @@ If you have any questions or need assistance with the installation, feel free to
 
 📧 **Email:** [jenarajesh.nitt@gmail.com](mailto:jenarajesh.nitt@gmail.com)  
 
-# **Example Usage**
+# **Example Usage** (Refer to Jupyter_Script_for_Analysts.ipynb)
 
 Here are a few sample snippets from a subset of offerings:
 
@@ -141,3 +141,12 @@ backtest_results = combined_forecast(
 )
 
 ```
+
+- **Sample Output for Future Horizon Forecasting:**
+
+![alt text](28E36887-4862-445A-8CA1-632241C14072-1.jpeg)
+
+- **Sample Output for Backtest Forecasting:**
+
+![alt text](BEE90FD4-4B50-4CC0-839F-E5EB15C5DEB8-1.jpeg)
+
