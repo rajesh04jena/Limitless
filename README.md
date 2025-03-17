@@ -97,7 +97,7 @@ data = pd.DataFrame(
         "feature2": np.random.choice(["A", "B", "C"], 30),
         "feature3": np.random.randn(30) * 10,
         "feature4": np.random.uniform(5, 50, 30),
-        "target": np.random.randint(10, 200, 30),
+        "target": np.random.randint(1000, 2000, 30),
     }
 )
 
