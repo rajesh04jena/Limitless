@@ -47,8 +47,8 @@ Step 1: Clone this repository to your local machine and
          navigate to the project directory
 ```sh
 git init
-git clone git@github.com:rajesh04jena/DemandForecast.git
-cd DemandForecast
+git git@github.com:rajesh04jena/Limitless.git
+cd Limitless
 ```
 
 Step 2: Create a conda environment(limtless-test-env), install dependencies and launch IDE
@@ -56,7 +56,7 @@ Step 2: Create a conda environment(limtless-test-env), install dependencies and 
 Alternative 1(execute command in terminal sequentially) :
 
 ```sh
- conda create -n limtless-test-env
+ conda create -n limtless-test-env python
  conda activate limtless-test-env
  conda install conda-forge::catboost
  conda install dask
